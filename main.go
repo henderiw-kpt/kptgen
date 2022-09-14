@@ -1,4 +1,4 @@
-//go:generate $GOBIN/mdtogo site/reference/cli/init internal/docs/generated/initdocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/cli/generate internal/docs/generated/generatedocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/README.md internal/docs/generated/overview --license=none --strategy=cmdDocs
 package main
 
