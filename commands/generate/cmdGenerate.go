@@ -30,9 +30,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		RunE:    r.runE,
 	}
 
-	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
-	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
-	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
+	//c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
+	//c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
+	//c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
 	//cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -156,19 +156,11 @@ func getPath(node *yaml.RNode) string {
 	if path, ok := ann[kioutil.PathAnnotation]; ok {
 		return path
 	}
-	/*
-		ns := node.GetNamespace()
-		if ns == "" {
-			ns = "non-namespaced"
-		}
-	*/
 	name := node.GetName()
 	if name == "" {
 		//name = "unnamed" + strconv.Itoa(id)
 		return ""
 	}
-	// TODO: harden for escaping etc.
-	//	return path.Join(ns, fmt.Sprintf("%s.yaml", name))
 	return fmt.Sprintf("%s.yaml", name)
 }
 
