@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
-
-var MatchAll = []string{"*.yaml", "*.yml"}
 
 // ResolveAbsAndRelPaths returns absolute and relative paths for input path
 func ResolveAbsAndRelPaths(path string) (string, string, error) {
@@ -56,8 +56,8 @@ func EnsureDir(originTag, dirName string, create bool) error {
 	return nil
 }
 
-func includeFile(path string) bool {
-	for _, m := range MatchAll {
+func includeFile(path string, match []string) bool {
+	for _, m := range match {
 		file := filepath.Base(path)
 		if matched, err := filepath.Match(m, file); err == nil && matched {
 			return true
@@ -66,15 +66,21 @@ func includeFile(path string) bool {
 	return false
 }
 
-func ReadFiles(source string, recursive bool) ([]string, error) {
+func ReadFiles(source string, recursive bool, match []string) ([]string, error) {
 	filePaths := make([]string, 0)
 	if recursive {
 		err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
-			if includeFile(filepath.Ext(info.Name())) {
+			// check for the file extension
+			if includeFile(filepath.Ext(info.Name()), match) {
 				filePaths = append(filePaths, path)
+			} else {
+				// check for exact file match
+				if includeFile(info.Name(), match) {
+					filePaths = append(filePaths, path)
+				}
 			}
 			return nil
 		})
@@ -82,7 +88,7 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 			return filePaths, err
 		}
 	} else {
-		if includeFile(filepath.Ext(source)) {
+		if includeFile(filepath.Ext(source), match) {
 			filePaths = append(filePaths, source)
 		} else {
 			files, err := os.ReadDir(source)
@@ -90,7 +96,7 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 				return filePaths, err
 			}
 			for _, info := range files {
-				if includeFile(filepath.Ext(info.Name())) {
+				if includeFile(filepath.Ext(info.Name()), match) {
 					path := filepath.Join(source, info.Name())
 					filePaths = append(filePaths, path)
 				}
@@ -101,12 +107,12 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 }
 
 // Code adapted from Porch internal cmdrpkgpull and cmdrpkgpush
-func ResourcesToPackageBuffer(resources map[string]string) (*kio.PackageBuffer, error) {
+func ResourcesToPackageBuffer(resources map[string]string, match []string) (*kio.PackageBuffer, error) {
 	keys := make([]string, 0, len(resources))
 	//fmt.Printf("ResourcesToPackageBuffer: resources: %v\n", len(resources))
 	for k := range resources {
 		fmt.Printf("ResourcesToPackageBuffer: resources key %s\n", k)
-		if !includeFile(k) {
+		if !includeFile(k, match) {
 			continue
 		}
 		//fmt.Printf("ResourcesToPackageBuffer: resources key append %s\n", k)
@@ -137,4 +143,79 @@ func ResourcesToPackageBuffer(resources map[string]string) (*kio.PackageBuffer, 
 	}
 
 	return &pb, nil
+}
+
+func CreateFile(targetDir string, node *yaml.RNode) error {
+	fileName := getPath(node)
+	// exclude patch files
+	if strings.Contains(fileName, "patch") {
+		return nil
+	}
+	if v, ok := node.GetAnnotations()["config.kubernetes.io/index"]; ok {
+		if v != "0" {
+			split := strings.Split(fileName, ".")
+			fileName = strings.Join([]string{split[0] + v, split[1]}, ".")
+		}
+	}
+
+	fullFileName := filepath.Join(targetDir, fileName)
+	pathSplit := strings.Split(fullFileName, "/")
+	if len(pathSplit) > 1 {
+		path := filepath.Join(pathSplit[:(len(pathSplit) - 1)]...)
+		if err := EnsureDir("TARGET_DIR", path, true); err != nil {
+			return err
+		}
+	}
+
+	f, err := os.Create(fullFileName)
+	if err != nil {
+		return fmt.Errorf("cannot create file: %s", fullFileName)
+	}
+	node.SetAnnotations(map[string]string{})
+	str, err := node.String()
+	if err != nil {
+		return fmt.Errorf("cannot stringify node err: %s", err.Error())
+	}
+
+	_, err = f.WriteString(str)
+	if err != nil {
+		return fmt.Errorf("cannot write string to file %s err: %s", fullFileName, err.Error())
+	}
+	return f.Close()
+}
+
+func UpdateFile(targetDir, data string, node *yaml.RNode) error {
+	fmt.Printf("data:\n%s\n", data)
+	fileName := getPath(node)
+
+	targetDirSplit := strings.Split(targetDir, "/")
+	if len(targetDirSplit) > 1 {
+		targetDir = filepath.Join(targetDirSplit[:(len(targetDirSplit) - 1)]...)
+	} else {
+		targetDir = "."
+	}
+	fullFileName := filepath.Join(targetDir, fileName)
+	f, err := os.Create(fullFileName)
+	if err != nil {
+		return fmt.Errorf("cannot create file: %s", fullFileName)
+	}
+	_, err = f.WriteString(data)
+	if err != nil {
+		return fmt.Errorf("cannot write string to file %s err: %s", fullFileName, err.Error())
+	}
+	return f.Close()
+
+}
+
+func getPath(node *yaml.RNode) string {
+	ann := node.GetAnnotations()
+	if path, ok := ann[kioutil.PathAnnotation]; ok {
+		return path
+	}
+	name := node.GetName()
+	if name == "" {
+		//name = "unnamed" + strconv.Itoa(id)
+		return ""
+	}
+	return fmt.Sprintf("%s.yaml", name)
 }
