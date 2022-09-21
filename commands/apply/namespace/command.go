@@ -7,11 +7,11 @@ import (
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
 	"github.com/henderiw-nephio/kptgen/internal/resource"
+	"github.com/henderiw-nephio/kptgen/internal/util/config"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -38,42 +38,28 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 }
 
 type Runner struct {
-	Command *cobra.Command
-	Ctx     context.Context
+	Command   *cobra.Command
+	TargetDir string
+	Ctx       context.Context
+	// dynamic input
+	pb      *kio.PackageBuffer
+	kptFile *yaml.RNode
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("TARGET_DIR is required, positional arguments; %d provided", len(args))
-	}
-
-	targetDir := args[0]
-
-	if err := fileutil.EnsureDir("TARGET_DIR", targetDir, true); err != nil {
-		return err
-	}
-
-	// read only yml, yaml files and Kptfile
-	match := []string{"Kptfile"}
-	pb, err := pkgutil.GetPackage(targetDir, match)
-	if err != nil {
-		return err
-	}
-
-	kptFile, err := r.getConfig(pb)
-	if err != nil {
+	if err := r.validate(args); err != nil {
 		return err
 	}
 
 	rn := &resource.Resource{
 		Operation:      resource.NamespaceSuffix,
-		ControllerName: kptFile.GetName(),
-		Name:           kptFile.GetName(),
-		Namespace:      kptFile.GetNamespace(),
-		TargetDir:      targetDir,
+		ControllerName: r.kptFile.GetName(),
+		Name:           r.kptFile.GetName(),
+		Namespace:      r.kptFile.GetNamespace(),
+		TargetDir:      r.TargetDir,
 		SubDir:         resource.NamespaceDir,
 		NameKind:       resource.NameKindResource,
-		PathNameKind:   resource.NameKindResource,
+		PathNameKind:   resource.NameKindKind,
 	}
 
 	if err := resource.RenderNamespace(rn); err != nil {
@@ -83,17 +69,34 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Runner) getConfig(pb *kio.PackageBuffer) (*yaml.RNode, error) {
-	var kptFile *yaml.RNode
-	for _, node := range pb.Nodes {
-		if v, ok := node.GetAnnotations()[filters.LocalConfigAnnotation]; ok && v == "true" {
-			if node.GetApiVersion() == kptv1.KptFileAPIVersion && node.GetKind() == kptv1.KptFileKind {
-				kptFile = node
-			}
-		}
+func (r *Runner) validate(args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("TARGET_DIR is required, positional arguments; %d provided", len(args))
 	}
-	if kptFile == nil {
-		return nil, fmt.Errorf("kptFile must be provided -> run kpt pkg init <DIR>")
+
+	r.TargetDir = args[0]
+
+	if err := fileutil.EnsureDir("TARGET_DIR", r.TargetDir, true); err != nil {
+		return err
 	}
-	return kptFile, nil
+
+	// read only yml, yaml files and Kptfile
+	match := []string{"Kptfile"}
+	pb, err := pkgutil.GetPackage(r.TargetDir, match)
+	if err != nil {
+		return err
+	}
+	r.pb = pb
+
+	cfg := config.New(r.pb, map[string]string{
+		kptv1.KptFileKind: "",
+	})
+
+	selectedNodes := cfg.Get()
+	if selectedNodes[0] == nil {
+		return fmt.Errorf("kptFile must be provided -> run kpt pkg init <DIR>")
+	}
+	r.kptFile = selectedNodes[0]
+
+	return nil
 }

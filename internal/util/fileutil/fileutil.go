@@ -111,7 +111,7 @@ func ResourcesToPackageBuffer(resources map[string]string, match []string) (*kio
 	keys := make([]string, 0, len(resources))
 	//fmt.Printf("ResourcesToPackageBuffer: resources: %v\n", len(resources))
 	for k := range resources {
-		fmt.Printf("ResourcesToPackageBuffer: resources key %s\n", k)
+		//fmt.Printf("ResourcesToPackageBuffer: resources key %s\n", k)
 		if !includeFile(k, match) {
 			continue
 		}
@@ -119,7 +119,7 @@ func ResourcesToPackageBuffer(resources map[string]string, match []string) (*kio
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	fmt.Printf("keys: %v\n", keys)
+	//fmt.Printf("keys: %v\n", keys)
 
 	// Create kio readers
 	inputs := []kio.Reader{}
@@ -185,7 +185,6 @@ func CreateFile(targetDir string, node *yaml.RNode) error {
 }
 
 func UpdateFile(targetDir, data string, node *yaml.RNode) error {
-	fmt.Printf("data:\n%s\n", data)
 	fileName := getPath(node)
 
 	targetDirSplit := strings.Split(targetDir, "/")
@@ -218,4 +217,21 @@ func getPath(node *yaml.RNode) string {
 		return ""
 	}
 	return fmt.Sprintf("%s.yaml", name)
+}
+
+func GetResosurcePathFromConfigPath(targetDir, configPath string) string {
+	split1 := strings.Split(targetDir, "/")
+	split2 := strings.Split(configPath, "/")
+
+	idx := 0
+	for i := range split1 {
+		if split1[i] != split2[i] {
+			break
+		}
+		idx = i
+	}
+	if idx > 0 {
+		configPath = filepath.Join(split2[(idx):]...)
+	}
+	return configPath
 }

@@ -105,11 +105,6 @@ func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
 		return fmt.Errorf("wrong object in buildValidatingWebhook: %v", reflect.TypeOf(objs))
 	}
 	for _, crd := range objs {
-
-		//crdSingular := getCRDSingular(o)
-		//crdPlural := getCRDPlural(o)
-		//crdGroup := getCRDGroup(o)
-
 		for _, crdVersion := range crd.Spec.Versions {
 			webhook := admissionv1.ValidatingWebhook{
 				Name:                    GetValidatingWebhookName(crd.Spec.Names.Singular, crd.Spec.Group),

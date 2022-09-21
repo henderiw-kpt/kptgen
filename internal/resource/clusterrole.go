@@ -31,12 +31,8 @@ func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}
 			return fmt.Errorf("wrong object in renderClusterRole: %v", reflect.TypeOf(crds))
 		}
 		crdRulesrules := getExtraPolicyRules(crds)
-		fmt.Println()
-		fmt.Println(crdRulesrules)
-		fmt.Println()
 		rules = append(rules, crdRulesrules...)
 	}
-	fmt.Println(rules)
 
 	x := &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
@@ -61,23 +57,17 @@ func (rn *Resource) ApplyClusterRole(x *rbacv1.ClusterRole) error {
 
 	var fp string
 	path, ok := x.Annotations["config.kubernetes.io/path"]
-	fmt.Println(path)
 	if ok {
 		fp = path
-		fmt.Println(rn.TargetDir)
 		pathSplit := strings.Split(rn.TargetDir, "/")
 		if len(pathSplit) > 1 {
-			fmt.Println(pathSplit)
 			pp := filepath.Join(pathSplit[:(len(pathSplit) - 1)]...)
-			fmt.Println(pp)
 			fp = filepath.Join(pp, fp)
 		}
 	}
 	if fp == "" {
 		fp = rn.GetFilePath(RoleSuffix)
 	}
-
-	fmt.Println(fp)
 
 	if err := fileutil.EnsureDir(ClusterRoleKind, filepath.Dir(fp), true); err != nil {
 		return err

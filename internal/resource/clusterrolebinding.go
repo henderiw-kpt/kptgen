@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -53,23 +52,17 @@ func (rn *Resource) ApplyClusterRoleBinding(x *rbacv1.ClusterRoleBinding) error 
 
 	var fp string
 	path, ok := x.Annotations["config.kubernetes.io/path"]
-	fmt.Println(path)
 	if ok {
 		fp = path
-		fmt.Println(rn.TargetDir)
 		pathSplit := strings.Split(rn.TargetDir, "/")
 		if len(pathSplit) > 1 {
-			fmt.Println(pathSplit)
 			pp := filepath.Join(pathSplit[:(len(pathSplit) - 1)]...)
-			fmt.Println(pp)
 			fp = filepath.Join(pp, fp)
 		}
 	}
 	if fp == "" {
 		fp = rn.GetFilePath(RoleBindingSuffix)
 	}
-
-	fmt.Println(fp)
 
 	if err := fileutil.EnsureDir(ClusterRoleKind, filepath.Dir(fp), true); err != nil {
 		return err
