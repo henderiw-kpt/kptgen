@@ -6,6 +6,10 @@ import (
 )
 
 const (
+	ControllerClusterRoleName = "controller"
+)
+
+const (
 	FnPodKind = "Pod"
 )
 
@@ -37,6 +41,9 @@ type PodSpec struct {
 	// MaxJobNumber indication on how many jobs a given pods should hold
 	MaxJobNumber *int32 `json:"maxJobNumber,omitempty"`
 
+	// ClusterRoles requested bindings
+	ClusterRoles []string `json:"clusterRoles,omitempty" yaml:"clusterRoles,omitempty"`
+
 	// PermissionRequests for RBAC rules required for this controller
 	// to function. The RBAC manager is responsible for assessing the requested
 	// permissions.
@@ -44,7 +51,7 @@ type PodSpec struct {
 	PermissionRequests map[string][]rbacv1.PolicyRule `json:"permissionRequests,omitempty"`
 
 	// pods define the pod specification used by the controller for LCM/resource allocation
-	Pod corev1.PodSpec `json:"pod,omitempty"`
+	PodTemplate corev1.PodTemplateSpec `json:"template,omitempty"`
 	// Services identifies the services the pod exposes
-	Service []corev1.Service `json:"services,omitempty"`
+	Services []corev1.Service `json:"services,omitempty"`
 }

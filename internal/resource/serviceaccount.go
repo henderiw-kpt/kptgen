@@ -16,7 +16,7 @@ const (
 	ServiceAccountKind = "ServiceAccount"
 )
 
-func RenderServiceAccount(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
+func (rn *Resource) RenderServiceAccount(fc *kptgenv1alpha1.PodSpec) error {
 	rn.Kind = ServiceAccountKind
 
 	x := &corev1.ServiceAccount{
@@ -25,7 +25,7 @@ func RenderServiceAccount(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
 			APIVersion: corev1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetName(),
+			Name:      rn.GetControllerName(""),
 			Namespace: rn.Namespace,
 		},
 	}
@@ -36,11 +36,11 @@ func RenderServiceAccount(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
 		return err
 	}
 
-	if err := fileutil.EnsureDir(ServiceAccountKind, filepath.Dir(rn.GetFilePath()), true); err != nil {
+	if err := fileutil.EnsureDir(ServiceAccountKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(rn.GetFilePath(), []byte(b.String()), 0644); err != nil {
+	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
 		return err
 	}
 	return nil

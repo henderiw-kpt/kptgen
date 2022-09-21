@@ -12,10 +12,12 @@ const (
 	ControllerDir           = "controller"
 	WebhookDir              = "webhook"
 	NamespaceDir            = "namespace"
+	RBACDir                 = "rbac"
 	ControllerSuffix        = "controller"
 	NamespaceSuffix         = "namespace"
-	RoleBindingSuffix       = "role-binding"
+	BindingSuffix           = "binding"
 	RoleSuffix              = "role"
+	RoleBindingSuffix       = "role-binding"
 	WebhookSuffix           = "webhook"
 	ServiceSuffix           = "svc"
 	CertSuffix              = "serving-cert"
@@ -27,28 +29,96 @@ const (
 
 type Resource struct {
 	//Prefix    string
-	Suffix    string
-	Name      string
-	Namespace string
-	TargetDir string
-	SubDir    string
-	Kind      string
+	Operation      string
+	NameKind       NameKind
+	PathNameKind   NameKind
+	ControllerName string // name of the controller/project name
+	Name           string // name of the resource
+	Namespace      string
+	TargetDir      string
+	SubDir         string
+	Kind           string
 }
 
-func (rn *Resource) GetFilePath() string {
-	return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.Kind)+".yaml")
-}
+type NameKind string
+
+const (
+	NameKindController         NameKind = "controller"
+	NameKindResource           NameKind = "resource"
+	NameKindControllerResource NameKind = "controllerResource"
+	NameKindKind               NameKind = "kind"
+)
 
 func (rn *Resource) GetName() string {
-	return strings.Join([]string{rn.Name, rn.Suffix}, "-")
+	switch rn.NameKind {
+	case NameKindController:
+		return rn.GetControllerName("")
+	case NameKindResource:
+		return rn.GetResourceName("")
+	case NameKindControllerResource:
+		return rn.GetResourceControllerName("")
+	case NameKindKind:
+		return rn.GetKindName("")
+	}
+	return "unknown"
 }
 
-func (rn *Resource) GetRoleBindingName() string {
-	return strings.Join([]string{rn.GetName(), RoleBindingSuffix}, "-")
+func (rn *Resource) GetFileName(extraSuffix string) string {
+	switch rn.PathNameKind {
+	case NameKindController:
+		return rn.GetControllerName(extraSuffix)
+	case NameKindResource:
+		return rn.GetResourceName(extraSuffix)
+	case NameKindControllerResource:
+		return rn.GetResourceControllerName(extraSuffix)
+	case NameKindKind:
+		return rn.GetKindName(extraSuffix)
+	}
+	return "unknown"
+}
+
+func (rn *Resource) GetFilePath(extraSuffix string) string {
+	return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.GetFileName(extraSuffix))+".yaml")
+}
+
+func (rn *Resource) GetNameSpace() string {
+	return rn.Namespace
+}
+
+func (rn *Resource) GetControllerName(extraSuffix string) string {
+	if extraSuffix != "" {
+		return strings.Join([]string{rn.ControllerName, ControllerSuffix, extraSuffix}, "-")
+	}
+	return strings.Join([]string{rn.ControllerName, ControllerSuffix}, "-")
+}
+
+func (rn *Resource) GetResourceName(extraSuffix string) string {
+	if extraSuffix != "" {
+		return strings.Join([]string{rn.Name, extraSuffix}, "-")
+	}
+	return rn.Name
+}
+
+func (rn *Resource) GetKindName(extraSuffix string) string {
+	if extraSuffix != "" {
+		return strings.Join([]string{rn.Kind, extraSuffix}, "-")
+	}
+	return rn.Kind
+}
+
+func (rn *Resource) GetResourceControllerName(extraSuffix string) string {
+	if extraSuffix != "" {
+		return strings.Join([]string{rn.ControllerName, rn.Name, ControllerSuffix, extraSuffix}, "-")
+	}
+	return strings.Join([]string{rn.ControllerName, rn.Name, ControllerSuffix}, "-")
 }
 
 func (rn *Resource) GetRoleName() string {
 	return strings.Join([]string{rn.GetName(), RoleSuffix}, "-")
+}
+
+func (rn *Resource) GetRoleBindingName() string {
+	return strings.Join([]string{rn.GetName(), RoleBindingSuffix}, "-")
 }
 
 func (rn *Resource) GetServiceName() string {
@@ -68,7 +138,7 @@ func (rn *Resource) GetValidatingWebhookName() string {
 }
 
 func (rn *Resource) GetLabelKey() string {
-	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, rn.Suffix}, "/")
+	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, rn.Operation}, "/")
 }
 
 func (rn *Resource) GetDnsName(x ...string) string {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/adddocs"
+	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
 	"github.com/henderiw-nephio/kptgen/internal/resource"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
@@ -66,11 +66,14 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	rn := &resource.Resource{
-		Suffix:    resource.NamespaceSuffix,
-		Name:      kptFile.GetName(),
-		Namespace: kptFile.GetNamespace(),
-		TargetDir: targetDir,
-		SubDir:    resource.NamespaceDir,
+		Operation:      resource.NamespaceSuffix,
+		ControllerName: kptFile.GetName(),
+		Name:           kptFile.GetName(),
+		Namespace:      kptFile.GetNamespace(),
+		TargetDir:      targetDir,
+		SubDir:         resource.NamespaceDir,
+		NameKind:       resource.NameKindResource,
+		PathNameKind:   resource.NameKindResource,
 	}
 
 	if err := resource.RenderNamespace(rn); err != nil {

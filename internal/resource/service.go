@@ -7,11 +7,9 @@ import (
 	"reflect"
 	"strings"
 
-	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
@@ -19,35 +17,38 @@ const (
 	ServiceKind = "Service"
 )
 
-func RenderService(rn *Resource, cfg, obj interface{}) error {
+func (rn *Resource) RenderService(cfg, obj interface{}) error {
 	rn.Kind = ServiceKind
 
-	info, ok := cfg.(*kptgenv1alpha1.WebhookSpec)
+	svc, ok := cfg.(corev1.Service)
 	if !ok {
-		return fmt.Errorf("wrong object in rendercertificate: %v", reflect.TypeOf(cfg))
+		return fmt.Errorf("wrong object in renderService: %v", reflect.TypeOf(cfg))
 	}
+
+	svc.ObjectMeta.Name = rn.GetServiceName()
+	svc.ObjectMeta.Namespace = rn.GetNameSpace()
+	if len(svc.ObjectMeta.Labels) == 0 {
+		svc.ObjectMeta.Labels = map[string]string{
+			rn.GetLabelKey(): rn.Name,
+		}
+	} else {
+		svc.ObjectMeta.Labels[rn.GetLabelKey()] = rn.Name
+	}
+	if len(svc.Spec.Selector) == 0 {
+		svc.Spec.Selector = map[string]string{
+			rn.GetLabelKey(): rn.Name,
+		}
+	} else {
+		svc.Spec.Selector[rn.GetLabelKey()] = rn.Name
+	}
+
 	x := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       ServiceKind,
 			APIVersion: corev1.SchemeGroupVersion.Identifier(),
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetServiceName(),
-			Namespace: rn.Namespace,
-		},
-		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				rn.GetLabelKey(): rn.GetServiceName(),
-			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:       WebhookSuffix,
-					Port:       info.Service.Port,
-					TargetPort: intstr.FromInt(int(info.Service.TargetPort)),
-					Protocol:   corev1.Protocol("TCP"),
-				},
-			},
-		},
+		ObjectMeta: svc.ObjectMeta,
+		Spec:       svc.Spec,
 	}
 
 	b := new(strings.Builder)
@@ -56,11 +57,11 @@ func RenderService(rn *Resource, cfg, obj interface{}) error {
 		return err
 	}
 
-	if err := fileutil.EnsureDir(ServiceKind, filepath.Dir(rn.GetFilePath()), true); err != nil {
+	if err := fileutil.EnsureDir(ServiceKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(rn.GetFilePath(), []byte(b.String()), 0644); err != nil {
+	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
 		return err
 	}
 	return nil

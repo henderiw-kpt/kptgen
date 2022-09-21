@@ -21,7 +21,7 @@ const (
 )
 
 //crdObjects fn.KubeObjects
-func RenderMutatingWebhook(rn *Resource, cfg, obj interface{}) error {
+func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) error {
 	rn.Kind = MutatingWebhookConfigurationKind
 
 	failurePolicy := admissionv1.Fail
@@ -83,17 +83,17 @@ func RenderMutatingWebhook(rn *Resource, cfg, obj interface{}) error {
 		return err
 	}
 
-	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(rn.GetFilePath()), true); err != nil {
+	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(rn.GetFilePath(), []byte(b.String()), 0644); err != nil {
+	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
 		return err
 	}
 	return nil
 }
 
-func RenderValidatingWebhook(rn *Resource, cfg, obj interface{}) error {
+func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
 	rn.Kind = ValidatingWebhookConfigurationKind
 
 	failurePolicy := admissionv1.Fail
@@ -160,11 +160,11 @@ func RenderValidatingWebhook(rn *Resource, cfg, obj interface{}) error {
 		return err
 	}
 
-	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(rn.GetFilePath()), true); err != nil {
+	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(rn.GetFilePath(), []byte(b.String()), 0644); err != nil {
+	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
 		return err
 	}
 	return nil

@@ -34,11 +34,11 @@ func RenderNamespace(rn *Resource) error {
 		return err
 	}
 
-	if err := fileutil.EnsureDir(ServiceKind, filepath.Dir(rn.GetFilePath()), true); err != nil {
+	if err := fileutil.EnsureDir(ServiceKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(rn.GetFilePath(), []byte(b.String()), 0644); err != nil {
+	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
 		return err
 	}
 	return nil

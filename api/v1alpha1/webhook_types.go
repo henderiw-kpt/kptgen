@@ -1,5 +1,9 @@
 package v1alpha1
 
+import (
+	corev1 "k8s.io/api/core/v1"
+)
+
 const (
 	FnWebhookKind = "Webhook"
 )
@@ -12,7 +16,7 @@ type WebhookSpec struct {
 	// selector
 	Selector Selector `json:"selector,omitempty" yaml:"selector,omitempty"`
 	// service
-	Service Service `json:"service,omitempty" yaml:"service,omitempty"`
+	Services []corev1.Service `json:"services,omitempty"`
 	// sertifcate
 	Certificate Certificate `json:"certificate,omitempty" yaml:"certificate,omitempty"`
 }

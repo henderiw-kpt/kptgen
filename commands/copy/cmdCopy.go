@@ -64,10 +64,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// the files with the following kinds and names will be copied
 	matchKinds := map[string][]string{
-		"ClusterRole":              {"manager-role"},
-		"ClusterRoleBinding":       {"manager-rolebinding"},
-		"Role":                     {"leader-election-role"},
-		"RoleBinding":              {"leader-election-rolebinding"},
+		//"ClusterRole":              {"manager-role"},
+		//"ClusterRoleBinding":       {"manager-rolebinding"},
+		//"Role":                     {"leader-election-role"},
+		//"RoleBinding":              {"leader-election-rolebinding"},
 		"CustomResourceDefinition": {""},
 	}
 

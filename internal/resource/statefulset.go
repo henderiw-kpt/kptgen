@@ -8,7 +8,6 @@ import (
 	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 )
@@ -17,10 +16,19 @@ const (
 	StatefullSetKind = "StatefulSet"
 )
 
-func RenderProviderStatefulSet(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
+func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) error {
 	rn.Kind = StatefullSetKind
 
-	fc.Pod.ServiceAccountName = rn.GetName()
+	fc.PodTemplate.Spec.ServiceAccountName = rn.GetControllerName("")
+	fc.PodTemplate.ObjectMeta.Name = rn.GetName()
+	fc.PodTemplate.ObjectMeta.Namespace = rn.GetNameSpace()
+	if len(fc.PodTemplate.ObjectMeta.Labels) == 0 {
+		fc.PodTemplate.ObjectMeta.Labels = map[string]string{
+			rn.GetLabelKey(): rn.Name,
+		}
+	} else {
+		fc.PodTemplate.ObjectMeta.Labels[rn.GetLabelKey()] = rn.Name
+	}
 
 	x := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -29,7 +37,7 @@ func RenderProviderStatefulSet(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rn.GetName(),
-			Namespace: rn.Namespace,
+			Namespace: rn.GetNameSpace(),
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: fc.Replicas,
@@ -38,16 +46,7 @@ func RenderProviderStatefulSet(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
 					rn.GetLabelKey(): rn.Name,
 				},
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      rn.GetName(),
-					Namespace: rn.Namespace,
-					Labels: map[string]string{
-						rn.GetLabelKey(): rn.Name,
-					},
-				},
-				Spec: fc.Pod,
-			},
+			Template: fc.PodTemplate,
 		},
 	}
 
@@ -57,11 +56,11 @@ func RenderProviderStatefulSet(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
 		return err
 	}
 
-	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(rn.GetFilePath()), true); err != nil {
+	if err := fileutil.EnsureDir(StatefullSetKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(rn.GetFilePath(), []byte(b.String()), 0644); err != nil {
+	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
 		return err
 	}
 	return nil

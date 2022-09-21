@@ -15,7 +15,7 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-func RenderCertificate(rn *Resource, cfg, obj interface{}) error {
+func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
 	rn.Kind = certv1.CertificateKind
 
 	info, ok := cfg.(*kptgenv1alpha1.WebhookSpec)
@@ -50,11 +50,11 @@ func RenderCertificate(rn *Resource, cfg, obj interface{}) error {
 		return err
 	}
 
-	if err := fileutil.EnsureDir(certv1.CertificateKind, filepath.Dir(rn.GetFilePath()), true); err != nil {
+	if err := fileutil.EnsureDir(certv1.CertificateKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(rn.GetFilePath(), []byte(b.String()), 0644); err != nil {
+	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
 		return err
 	}
 	return nil

@@ -6,7 +6,7 @@ import (
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
-	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/adddocs"
+	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
 	"github.com/henderiw-nephio/kptgen/internal/resource"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
@@ -52,7 +52,7 @@ type Runner struct {
 }
 
 type objInfo struct {
-	renderFn func(*resource.Resource, interface{}, interface{}) error
+	renderFn func(interface{}, interface{}) error
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
@@ -88,25 +88,28 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	rn := &resource.Resource{
-		Suffix:    resource.WebhookSuffix,
-		Name:      kptFile.GetName(),
-		Namespace: kptFile.GetNamespace(),
-		TargetDir: targetDir,
-		SubDir:    resource.WebhookDir,
+		Operation:      resource.WebhookSuffix,
+		ControllerName: kptFile.GetName(),
+		Name:           kptFile.GetName(),
+		Namespace:      kptFile.GetNamespace(),
+		TargetDir:      targetDir,
+		SubDir:         resource.WebhookDir,
+		NameKind:       resource.NameKindController,
+		PathNameKind:   resource.NameKindKind,
 	}
 
 	matchResources := map[string]*objInfo{
 		"Service": {
-			renderFn: resource.RenderService,
+			renderFn: rn.RenderService,
 		},
 		"Certificate": {
-			renderFn: resource.RenderCertificate,
+			renderFn: rn.RenderCertificate,
 		},
 		"MutatingWebhookConfiguration": {
-			renderFn: resource.RenderMutatingWebhook,
+			renderFn: rn.RenderMutatingWebhook,
 		},
 		"ValidatingWebhookConfiguration": {
-			renderFn: resource.RenderValidatingWebhook,
+			renderFn: rn.RenderValidatingWebhook,
 		},
 	}
 
@@ -135,10 +138,19 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return fmt.Errorf("container pod not found")
 	}
 
-	for _, objInfo := range matchResources {
-		if err := objInfo.renderFn(rn, r.Webhook.Spec, crdObjects); err != nil {
-			return err
+	for kind, objInfo := range matchResources {
+		if kind == "Service" {
+			for _, service := range r.Webhook.Spec.Services {
+				if err := objInfo.renderFn(service, crdObjects); err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := objInfo.renderFn(r.Webhook.Spec, crdObjects); err != nil {
+				return err
+			}
 		}
+
 	}
 
 	switch r.Webhook.Spec.Selector.Kind {

@@ -16,13 +16,17 @@ type Container struct {
 type ContainerSpec struct {
 	// selector
 	Selector Selector `json:"selector,omitempty" yaml:"selector,omitempty"`
-	// PermissionRequests for RBAC rules required for this controller
-	// to function. The RBAC manager is responsible for assessing the requested
-	// permissions.
+
+	// ClusterRoles requested bindings
+	ClusterRoles []string `json:"clusterRoles,omitempty" yaml:"clusterRoles,omitempty"`
+
+	// PermissionRequests for RBAC rules
 	// +optional
 	PermissionRequests map[string][]rbacv1.PolicyRule `json:"permissionRequests,omitempty"`
+
 	// Containers identifies the containers in the pod
 	Containers []corev1.Container `json:"containers,omitempty"`
+
 	// Services identifies the services the container exposes
 	Service []corev1.Service `json:"services,omitempty"`
 }

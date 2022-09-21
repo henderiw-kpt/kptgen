@@ -9,7 +9,6 @@ import (
 	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 )
@@ -18,10 +17,19 @@ const (
 	DeploymentKind = "Deployment"
 )
 
-func RenderDeployment(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
+func (rn *Resource) RenderDeployment(fc *kptgenv1alpha1.PodSpec) error {
 	rn.Kind = DeploymentKind
 
-	fc.Pod.ServiceAccountName = rn.GetName()
+	fc.PodTemplate.Spec.ServiceAccountName = rn.GetControllerName("")
+	fc.PodTemplate.ObjectMeta.Name = rn.GetName()
+	fc.PodTemplate.ObjectMeta.Namespace = rn.GetNameSpace()
+	if len(fc.PodTemplate.ObjectMeta.Labels) == 0 {
+		fc.PodTemplate.ObjectMeta.Labels = map[string]string{
+			rn.GetLabelKey(): rn.Name,
+		}
+	} else {
+		fc.PodTemplate.ObjectMeta.Labels[rn.GetLabelKey()] = rn.Name
+	}
 
 	x := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -39,16 +47,7 @@ func RenderDeployment(rn *Resource, fc *kptgenv1alpha1.PodSpec) error {
 					rn.GetLabelKey(): rn.Name,
 				},
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      rn.GetName(),
-					Namespace: rn.Namespace,
-					Labels: map[string]string{
-						rn.GetLabelKey(): rn.Name,
-					},
-				},
-				Spec: fc.Pod,
-			},
+			Template: fc.PodTemplate,
 		},
 	}
 	return ApplyDeployment(rn, x)
@@ -76,7 +75,7 @@ func ApplyDeployment(rn *Resource, x *appsv1.Deployment) error {
 		}
 	}
 	if fp == "" {
-		fp = rn.GetFilePath()
+		fp = rn.GetFilePath("")
 	}
 
 	fmt.Println(fp)
