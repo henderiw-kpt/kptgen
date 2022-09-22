@@ -243,7 +243,7 @@ func (r *Runner) validate(args []string, kind string) error {
 	}
 	r.kptFile = selectedNodes[kptv1.KptFileKind]
 
-	if selectedNodes[kptgenv1alpha1.FnPodKind] == nil {
+	if selectedNodes[kptgenv1alpha1.FnWebhookKind] == nil {
 		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
 	}
 	r.fnConfig = selectedNodes[kptgenv1alpha1.FnWebhookKind]
