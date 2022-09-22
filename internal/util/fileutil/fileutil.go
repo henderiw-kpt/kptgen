@@ -2,11 +2,14 @@ package fileutil
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/printers"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -106,25 +109,19 @@ func ReadFiles(source string, recursive bool, match []string) ([]string, error) 
 	return filePaths, nil
 }
 
-// Code adapted from Porch internal cmdrpkgpull and cmdrpkgpush
 func ResourcesToPackageBuffer(resources map[string]string, match []string) (*kio.PackageBuffer, error) {
 	keys := make([]string, 0, len(resources))
-	//fmt.Printf("ResourcesToPackageBuffer: resources: %v\n", len(resources))
 	for k := range resources {
-		//fmt.Printf("ResourcesToPackageBuffer: resources key %s\n", k)
 		if !includeFile(k, match) {
 			continue
 		}
-		//fmt.Printf("ResourcesToPackageBuffer: resources key append %s\n", k)
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	//fmt.Printf("keys: %v\n", keys)
 
 	// Create kio readers
 	inputs := []kio.Reader{}
 	for _, k := range keys {
-		//fmt.Printf("ResourcesToPackageBuffer: key %s\n", k)
 		v := resources[k]
 		inputs = append(inputs, &kio.ByteReader{
 			Reader:            strings.NewReader(v),
@@ -145,12 +142,50 @@ func ResourcesToPackageBuffer(resources map[string]string, match []string) (*kio
 	return &pb, nil
 }
 
-func CreateFile(targetDir string, node *yaml.RNode) error {
-	fileName := getPath(node)
+func CreateFileFromRObject(originTag, fp string, x runtime.Object) error {
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	if err := p.PrintObj(x, b); err != nil {
+		return err
+	}
+
+	if err := EnsureDir(originTag, filepath.Dir(fp), true); err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(fp, []byte(b.String()), 0644); err != nil {
+		return err
+	}
+	fmt.Printf("creating resource ... : %s %s\n", x.GetObjectKind().GroupVersionKind(), fp)
+	return nil
+}
+
+func UpdateFileFromRObject(originTag, fp string, x runtime.Object) error {
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	if err := p.PrintObj(x, b); err != nil {
+		return err
+	}
+
+	if err := EnsureDir(originTag, filepath.Dir(fp), true); err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(fp, []byte(b.String()), 0644); err != nil {
+		return err
+	}
+	fmt.Printf("updating resource ... : %s %s\n", x.GetObjectKind().GroupVersionKind(), fp)
+	return nil
+}
+
+func CreateFileFromRNode(targetDir string, node *yaml.RNode) error {
+	fileName := GetPathFromRNode(node)
 	// exclude patch files
+	// NEED TO FIND A BETTER SOLUTION
 	if strings.Contains(fileName, "patch") {
 		return nil
 	}
+	// if multiple yaml objects exists we split them accross multiple files
 	if v, ok := node.GetAnnotations()["config.kubernetes.io/index"]; ok {
 		if v != "0" {
 			split := strings.Split(fileName, ".")
@@ -158,55 +193,26 @@ func CreateFile(targetDir string, node *yaml.RNode) error {
 		}
 	}
 
-	fullFileName := filepath.Join(targetDir, fileName)
-	pathSplit := strings.Split(fullFileName, "/")
-	if len(pathSplit) > 1 {
-		path := filepath.Join(pathSplit[:(len(pathSplit) - 1)]...)
-		if err := EnsureDir("TARGET_DIR", path, true); err != nil {
-			return err
-		}
+	fp := filepath.Join(targetDir, fileName)
+	if err := EnsureDir("TARGET_DIR", filepath.Dir(fp), true); err != nil {
+		return err
 	}
-
-	f, err := os.Create(fullFileName)
-	if err != nil {
-		return fmt.Errorf("cannot create file: %s", fullFileName)
-	}
+	// clear annotations
 	node.SetAnnotations(map[string]string{})
-	str, err := node.String()
-	if err != nil {
-		return fmt.Errorf("cannot stringify node err: %s", err.Error())
-	}
 
-	_, err = f.WriteString(str)
-	if err != nil {
-		return fmt.Errorf("cannot write string to file %s err: %s", fullFileName, err.Error())
-	}
-	return f.Close()
+	fmt.Printf("creating resource ... : %s %s\n", node.GetApiVersion(), fp)
+	return ioutil.WriteFile(fp, []byte(node.MustString()), 0644)
 }
 
-func UpdateFile(targetDir, data string, node *yaml.RNode) error {
-	fileName := getPath(node)
+func UpdateFileFromRNode(targetDir, data string, node *yaml.RNode) error {
+	fileName := GetPathFromRNode(node)
+	fp := GetFullPath(targetDir, fileName)
 
-	targetDirSplit := strings.Split(targetDir, "/")
-	if len(targetDirSplit) > 1 {
-		targetDir = filepath.Join(targetDirSplit[:(len(targetDirSplit) - 1)]...)
-	} else {
-		targetDir = "."
-	}
-	fullFileName := filepath.Join(targetDir, fileName)
-	f, err := os.Create(fullFileName)
-	if err != nil {
-		return fmt.Errorf("cannot create file: %s", fullFileName)
-	}
-	_, err = f.WriteString(data)
-	if err != nil {
-		return fmt.Errorf("cannot write string to file %s err: %s", fullFileName, err.Error())
-	}
-	return f.Close()
-
+	fmt.Printf("updating resource ... : %s %s %s %s\n", node.GetApiVersion(), node.GetKind(), node.GetName(), fp)
+	return ioutil.WriteFile(fp, []byte(data), 0644)
 }
 
-func getPath(node *yaml.RNode) string {
+func GetPathFromRNode(node *yaml.RNode) string {
 	ann := node.GetAnnotations()
 	if path, ok := ann[kioutil.PathAnnotation]; ok {
 		return path
@@ -219,9 +225,11 @@ func getPath(node *yaml.RNode) string {
 	return fmt.Sprintf("%s.yaml", name)
 }
 
-func GetResosurcePathFromConfigPath(targetDir, configPath string) string {
+// GetRelativePath returns the path which kioutil would return
+// the relative path in the package, used for comparisons
+func GetRelativePath(targetDir, fp string) string {
 	split1 := strings.Split(targetDir, "/")
-	split2 := strings.Split(configPath, "/")
+	split2 := strings.Split(fp, "/")
 
 	idx := 0
 	for i := range split1 {
@@ -230,8 +238,22 @@ func GetResosurcePathFromConfigPath(targetDir, configPath string) string {
 		}
 		idx = i
 	}
+	// relative path
+	rp := fp
 	if idx > 0 {
-		configPath = filepath.Join(split2[(idx):]...)
+		rp = filepath.Join(split2[(idx):]...)
 	}
-	return configPath
+	return rp
+}
+
+// GetFullPath returns the path from where the binary is run
+// used to create/update files in the filesystem
+func GetFullPath(targetDir, rp string) string {
+	// if the targetDir has multiple subdirectories we need to augment the path
+	pathSplit := strings.Split(targetDir, "/")
+	if len(pathSplit) > 1 {
+		pp := filepath.Join(pathSplit[:(len(pathSplit) - 1)]...)
+		rp = filepath.Join(pp, rp)
+	}
+	return rp
 }

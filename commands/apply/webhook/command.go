@@ -16,6 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	sigyaml "sigs.k8s.io/yaml"
 )
@@ -166,9 +167,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 				}
 			}
 		}
-		if err := resource.ApplyDeployment(rn, x); err != nil {
-			return err
-		}
+
+		// the path must exist since we read the resource from the filesystem
+
+		fp := fileutil.GetFullPath(rn.TargetDir, x.Annotations[kioutil.PathAnnotation])
+		return fileutil.UpdateFileFromRObject(resource.DeploymentKind, fp, x)
 
 	case "StatefulSet":
 	}
@@ -228,7 +231,7 @@ func (r *Runner) validate(args []string) error {
 
 	cfg := config.New(r.pb, map[string]string{
 		kptv1.KptFileKind:            "",
-		kptgenv1alpha1.FnWebhookKind: fileutil.GetResosurcePathFromConfigPath(r.TargetDir, r.FnConfigPath),
+		kptgenv1alpha1.FnWebhookKind: fileutil.GetRelativePath(r.TargetDir, r.FnConfigPath),
 	})
 
 	selectedNodes := cfg.Get()

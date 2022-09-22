@@ -2,8 +2,6 @@ package resource
 
 import (
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -12,7 +10,6 @@ import (
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const (
@@ -77,20 +74,7 @@ func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) error {
 		Webhooks: webhooks,
 	}
 
-	b := new(strings.Builder)
-	p := printers.YAMLPrinter{}
-	if err := p.PrintObj(x, b); err != nil {
-		return err
-	}
-
-	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
-		return err
-	}
-	return nil
+	return fileutil.CreateFileFromRObject(MutatingWebhookConfigurationKind, rn.GetFilePath(""), x)
 }
 
 func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
@@ -149,18 +133,5 @@ func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
 		Webhooks: webhooks,
 	}
 
-	b := new(strings.Builder)
-	p := printers.YAMLPrinter{}
-	if err := p.PrintObj(x, b); err != nil {
-		return err
-	}
-
-	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
-		return err
-	}
-	return nil
+	return fileutil.CreateFileFromRObject(ValidatingWebhookConfigurationKind, rn.GetFilePath(""), x)
 }

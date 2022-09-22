@@ -75,7 +75,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		if names, ok := matchKinds[node.GetKind()]; ok {
 			for _, name := range names {
 				if name == "" || node.GetName() == name {
-					fileutil.CreateFile(targetDir, node)
+					fileutil.CreateFileFromRNode(targetDir, node)
 				}
 			}
 		}

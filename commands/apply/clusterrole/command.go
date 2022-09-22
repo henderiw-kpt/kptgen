@@ -103,7 +103,7 @@ func (r *Runner) validate(args []string) error {
 
 	cfg := config.New(r.pb, map[string]string{
 		kptv1.KptFileKind:                "",
-		kptgenv1alpha1.FnClusterRoleKind: fileutil.GetResosurcePathFromConfigPath(r.TargetDir, r.FnConfigPath),
+		kptgenv1alpha1.FnClusterRoleKind: fileutil.GetRelativePath(r.TargetDir, r.FnConfigPath),
 	})
 
 	selectedNodes := cfg.Get()

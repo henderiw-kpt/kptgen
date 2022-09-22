@@ -1,15 +1,10 @@
 package resource
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"strings"
-
 	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const (
@@ -49,36 +44,5 @@ func (rn *Resource) RenderDeployment(fc *kptgenv1alpha1.PodSpec) error {
 			Template: fc.PodTemplate,
 		},
 	}
-	return ApplyDeployment(rn, x)
-}
-
-func ApplyDeployment(rn *Resource, x *appsv1.Deployment) error {
-	b := new(strings.Builder)
-	p := printers.YAMLPrinter{}
-	if err := p.PrintObj(x, b); err != nil {
-		return err
-	}
-
-	var fp string
-	path, ok := x.Annotations["config.kubernetes.io/path"]
-	if ok {
-		fp = path
-		pathSplit := strings.Split(rn.TargetDir, "/")
-		if len(pathSplit) > 1 {
-			pp := filepath.Join(pathSplit[:(len(pathSplit) - 1)]...)
-			fp = filepath.Join(pp, fp)
-		}
-	}
-	if fp == "" {
-		fp = rn.GetFilePath("")
-	}
-
-	if err := fileutil.EnsureDir(DeploymentKind, filepath.Dir(fp), true); err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(fp, []byte(b.String()), 0644); err != nil {
-		return err
-	}
-	return nil
+	return fileutil.CreateFileFromRObject(DeploymentKind, rn.GetFilePath(""), x)
 }

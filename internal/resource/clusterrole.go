@@ -2,17 +2,13 @@ package resource
 
 import (
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 	"reflect"
 	"sort"
-	"strings"
 
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const (
@@ -30,8 +26,8 @@ func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}
 		if !ok {
 			return fmt.Errorf("wrong object in renderClusterRole: %v", reflect.TypeOf(crds))
 		}
-		crdRulesrules := getExtraPolicyRules(crds)
-		rules = append(rules, crdRulesrules...)
+		crdRules := getCRDPolicyRules(crds)
+		rules = append(rules, crdRules...)
 	}
 
 	x := &rbacv1.ClusterRole{
@@ -45,41 +41,10 @@ func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}
 		Rules: rules,
 	}
 
-	return rn.ApplyClusterRole(x)
+	return fileutil.CreateFileFromRObject(ClusterRoleKind, rn.GetFilePath(RoleSuffix), x)
 }
 
-func (rn *Resource) ApplyClusterRole(x *rbacv1.ClusterRole) error {
-	b := new(strings.Builder)
-	p := printers.YAMLPrinter{}
-	if err := p.PrintObj(x, b); err != nil {
-		return err
-	}
-
-	var fp string
-	path, ok := x.Annotations["config.kubernetes.io/path"]
-	if ok {
-		fp = path
-		pathSplit := strings.Split(rn.TargetDir, "/")
-		if len(pathSplit) > 1 {
-			pp := filepath.Join(pathSplit[:(len(pathSplit) - 1)]...)
-			fp = filepath.Join(pp, fp)
-		}
-	}
-	if fp == "" {
-		fp = rn.GetFilePath(RoleSuffix)
-	}
-
-	if err := fileutil.EnsureDir(ClusterRoleKind, filepath.Dir(fp), true); err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(fp, []byte(b.String()), 0644); err != nil {
-		return err
-	}
-	return nil
-}
-
-func getExtraPolicyRules(crds []extv1.CustomResourceDefinition) []rbacv1.PolicyRule {
+func getCRDPolicyRules(crds []extv1.CustomResourceDefinition) []rbacv1.PolicyRule {
 	// Our list of CRDs has no guaranteed order, so we sort them in order to
 	// ensure we don't reorder our RBAC rules on each update.
 	sort.Slice(crds, func(i, j int) bool { return crds[i].GetName() < crds[j].GetName() })

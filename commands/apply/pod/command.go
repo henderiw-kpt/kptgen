@@ -58,8 +58,8 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err := r.validate(args); err != nil {
 		return err
 	}
-	fmt.Printf("permission requests: %#v\n", r.fc.Spec.PermissionRequests)
-	fmt.Printf("pod template: %#v\n", r.fc.Spec.PodTemplate)
+	//fmt.Printf("permission requests: %#v\n", r.fc.Spec.PermissionRequests)
+	//fmt.Printf("pod template: %#v\n", r.fc.Spec.PodTemplate)
 
 	crds, err := resourceutil.GetCRDs(r.pb)
 	if err != nil {
@@ -232,7 +232,7 @@ func (r *Runner) validate(args []string) error {
 
 	cfg := config.New(r.pb, map[string]string{
 		kptv1.KptFileKind:        "",
-		kptgenv1alpha1.FnPodKind: fileutil.GetResosurcePathFromConfigPath(r.TargetDir, r.FnConfigPath),
+		kptgenv1alpha1.FnPodKind: fileutil.GetRelativePath(r.TargetDir, r.FnConfigPath),
 	})
 
 	selectedNodes := cfg.Get()

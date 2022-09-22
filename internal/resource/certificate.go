@@ -2,17 +2,13 @@ package resource
 
 import (
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 	"reflect"
-	"strings"
 
 	certv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	certmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
 	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
@@ -44,18 +40,5 @@ func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
 		},
 	}
 
-	b := new(strings.Builder)
-	p := printers.YAMLPrinter{}
-	if err := p.PrintObj(x, b); err != nil {
-		return err
-	}
-
-	if err := fileutil.EnsureDir(certv1.CertificateKind, filepath.Dir(rn.GetFilePath("")), true); err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(rn.GetFilePath(""), []byte(b.String()), 0644); err != nil {
-		return err
-	}
-	return nil
+	return fileutil.CreateFileFromRObject(certv1.CertificateKind, rn.GetFilePath(""), x)
 }
