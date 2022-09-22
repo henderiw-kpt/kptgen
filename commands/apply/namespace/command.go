@@ -93,10 +93,10 @@ func (r *Runner) validate(args []string, kind string) error {
 	})
 
 	selectedNodes := cfg.Get()
-	if selectedNodes[0] == nil {
+	if selectedNodes[kptv1.KptFileKind] == nil {
 		return fmt.Errorf("kptFile must be provided -> run kpt pkg init <DIR>")
 	}
-	r.kptFile = selectedNodes[0]
+	r.kptFile = selectedNodes[kptv1.KptFileKind]
 
 	return nil
 }

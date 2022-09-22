@@ -3,6 +3,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
@@ -234,15 +235,20 @@ func (r *Runner) validate(args []string, kind string) error {
 		kptgenv1alpha1.FnWebhookKind: fileutil.GetRelativePath(r.TargetDir, r.FnConfigPath),
 	})
 
+	fmt.Println("relative", filepath.Base(r.FnConfigPath))
+
 	selectedNodes := cfg.Get()
-	if selectedNodes[0] == nil {
+	if selectedNodes[kptv1.KptFileKind] == nil {
 		return fmt.Errorf("kptFile must be provided -> run kpt pkg init <DIR>")
 	}
-	r.kptFile = selectedNodes[0]
-	if selectedNodes[1] == nil {
+	r.kptFile = selectedNodes[kptv1.KptFileKind]
+
+	if selectedNodes[kptgenv1alpha1.FnPodKind] == nil {
 		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
 	}
-	r.fnConfig = selectedNodes[1]
+	r.fnConfig = selectedNodes[kptgenv1alpha1.FnPodKind]
+
+	fmt.Println("fn config", r.fnConfig.MustString())
 
 	r.fc = kptgenv1alpha1.Webhook{}
 	if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {

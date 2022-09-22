@@ -1,6 +1,11 @@
 package resid
 
-import "sigs.k8s.io/kustomize/kyaml/yaml"
+import (
+	"path/filepath"
+
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
 
 type ResId struct {
 	Gvk      `json:",inline,omitempty" yaml:",inline,omitempty"`
@@ -16,11 +21,12 @@ func FromRNode(rn *yaml.RNode) ResId {
 	group, version := ParseGroupVersion(rn.GetApiVersion())
 	return NewResId(
 		Gvk{Group: group, Version: version, Kind: rn.GetKind()},
-		rn.GetAnnotations()["internal.config.kubernetes.io/path"],
+		filepath.Base(rn.GetAnnotations()[kioutil.PathAnnotation]),
 	)
 }
 
 func (id *ResId) IsSelectedBy(selector ResId) bool {
+
 	return (selector.FileName == "" || selector.FileName == id.FileName) &&
 		id.Gvk.IsSelected(&selector.Gvk)
 }
