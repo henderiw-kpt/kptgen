@@ -104,7 +104,7 @@ func (r *Runner) validate(args []string, kind string) error {
 
 	cfg := config.New(r.pb, map[string]string{
 		kptv1.KptFileKind:                "",
-		kptgenv1alpha1.FnClusterRoleKind: fileutil.GetRelativePath(r.TargetDir, r.FnConfigPath),
+		kptgenv1alpha1.FnClusterRoleKind: filepath.Base(r.FnConfigPath),
 	})
 
 	fmt.Println("relative", filepath.Base(r.FnConfigPath))
