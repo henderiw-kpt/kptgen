@@ -118,7 +118,7 @@ func (r *Runner) validate(args []string, kind string) error {
 	if selectedNodes[kptgenv1alpha1.FnPodKind] == nil {
 		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
 	}
-	r.fnConfig = selectedNodes[kptgenv1alpha1.FnPodKind]
+	r.fnConfig = selectedNodes[kptgenv1alpha1.FnClusterRoleKind]
 
 	fmt.Println("fn config", r.fnConfig.MustString())
 
