@@ -7,6 +7,7 @@ import (
 	"github.com/henderiw-nephio/kptgen/commands/apply/namespace"
 	"github.com/henderiw-nephio/kptgen/commands/apply/pod"
 	"github.com/henderiw-nephio/kptgen/commands/apply/webhook"
+	"github.com/henderiw-nephio/kptgen/commands/apply/service"
 	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +35,7 @@ func GetCommand(ctx context.Context, name, version string) *cobra.Command {
 		webhook.NewCommand(ctx, version),
 		namespace.NewCommand(ctx, version),
 		clusterrole.NewCommand(ctx, version),
+		service.NewCommand(ctx, version),
 		//container.GetCommand(ctx, version),
 		//metrics.GetCommand(ctx, "", version),
 	)

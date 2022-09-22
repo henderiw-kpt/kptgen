@@ -47,6 +47,7 @@ const (
 	NameKindResource           NameKind = "resource"
 	NameKindControllerResource NameKind = "controllerResource"
 	NameKindKind               NameKind = "kind"
+	NameKindKindResource       NameKind = "kindResource"
 )
 
 func (rn *Resource) GetName() string {
@@ -73,6 +74,8 @@ func (rn *Resource) GetFileName(extraSuffix string) string {
 		return rn.GetResourceControllerName(extraSuffix)
 	case NameKindKind:
 		return rn.GetKindName(extraSuffix)
+	case NameKindKindResource:
+		return rn.GetKindResourceName(extraSuffix)
 	}
 	return "unknown"
 }
@@ -104,6 +107,13 @@ func (rn *Resource) GetKindName(extraSuffix string) string {
 		return strings.Join([]string{rn.Kind, extraSuffix}, "-")
 	}
 	return rn.Kind
+}
+
+func (rn *Resource) GetKindResourceName(extraSuffix string) string {
+	if extraSuffix != "" {
+		return strings.Join([]string{rn.Kind, rn.Name, extraSuffix}, "-")
+	}
+	return strings.Join([]string{rn.Kind, rn.Name}, "-")
 }
 
 func (rn *Resource) GetResourceControllerName(extraSuffix string) string {

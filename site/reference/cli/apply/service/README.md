@@ -1,23 +1,23 @@
 ---
-title: "`webhook`"
-linkTitle: "webhook"
+title: "`service`"
+linkTitle: "service"
 type: docs
 description: >
-  Add a webhook to the package.
+  Add a service to the package.
 ---
 
 <!--mdtogo:Short
-    Add a webhook to the package.
+    Add a service to the package.
 -->
 
-`webhook` adds a webhook to the package.
+`service` adds a service to the package.
 
 ### Synopsis
 
 <!--mdtogo:Long-->
 
 ```
-kptgen add webhook TARGET_DIR [flags]
+kptgen add service TARGET_DIR [flags]
 ```
 
 #### Args
@@ -55,8 +55,8 @@ cd $TEST_HOME
 <!-- @ @verifyStaleExamples-->
 
 ```shell
-# Add a pod with the characteristics in the fn-config to the package
-$ kptgen add webhook ./blueprint/admin --fn-config webhook-fn-config
+# Add a service with the characteristics in the fn-config to the package
+$ kptgen add service ./blueprint/admin --fn-config service-fn-config
 ```
 
 <!--mdtogo-->

@@ -61,6 +61,26 @@ var PodExamples = `
   $ kptgen add pod ./blueprint/admin --fn-config pod-fn-config
 `
 
+var ServiceShort = `Add a service to the package.`
+var ServiceLong = `
+  kptgen add service TARGET_DIR [flags]
+
+Args:
+
+  TARGET_DIR:
+    The target directory of the package
+
+Flags:
+
+  --fn-config:
+    Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the operation.
+`
+var ServiceExamples = `
+
+  # Add a service with the characteristics in the fn-config to the package
+  $ kptgen add service ./blueprint/admin --fn-config service-fn-config
+`
+
 var WebhookShort = `Add a webhook to the package.`
 var WebhookLong = `
   kptgen add webhook TARGET_DIR [flags]

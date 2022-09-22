@@ -17,12 +17,12 @@ initialize the kpt package
 ```
 export KPT_BLUEPRINT_DIR=./blueprint/admin3
 mkdir -p ${KPT_BLUEPRINT_DIR}
-kpt pkg init ${KPT_BLUEPRINT_DIR}
+kpt pkg clone ${KPT_BLUEPRINT_DIR} // clone the fn-config templates
 set the namespace in the KptFile -> to be automated
 ```
 
 ```
-kptgen init ${KPT_BLUEPRINT_DIR} -> TODO
+kptgen clone  ${KPT_BLUEPRINT_DIR} -> TODO
 kptgen copy SOURCE_DIR ${KPT_BLUEPRINT_DIR}
 kptgen apply pod ${KPT_BLUEPRINT_DIR} --fn-config pod-fn-config.yaml
 kptgen apply webhook ${KPT_BLUEPRINT_DIR} --fn-config webhook-fn-config.yaml
@@ -35,4 +35,5 @@ TODO
 ```
 * kptgen apply container (kube-rbac-proxy)
 * kptgen apply metrics
+* kptgen apply service
 ```

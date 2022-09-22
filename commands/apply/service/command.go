@@ -1,4 +1,4 @@
-package webhook
+package service
 
 import (
 	"context"
@@ -14,8 +14,6 @@ import (
 	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
 	"github.com/spf13/cobra"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -28,11 +26,11 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		Ctx: ctx,
 	}
 	c := &cobra.Command{
-		Use:     "webhook TARGET_DIR [flags]",
+		Use:     "service TARGET_DIR [flags]",
 		Args:    cobra.MaximumNArgs(1),
-		Short:   docs.WebhookShort,
-		Long:    docs.WebhookShort + "\n" + docs.WebhookLong,
-		Example: docs.WebhookExamples,
+		Short:   docs.ServiceShort,
+		Long:    docs.ServiceShort + "\n" + docs.ServiceLong,
+		Example: docs.ServiceExamples,
 		RunE:    r.runE,
 	}
 
@@ -55,7 +53,7 @@ type Runner struct {
 	pb       *kio.PackageBuffer
 	kptFile  *yaml.RNode
 	fnConfig *yaml.RNode
-	fc       kptgenv1alpha1.Webhook
+	fc       kptgenv1alpha1.Service
 }
 
 type objInfo struct {
@@ -63,46 +61,30 @@ type objInfo struct {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if err := r.validate(args, kptgenv1alpha1.FnWebhookKind); err != nil {
+	if err := r.validate(args, kptgenv1alpha1.FnServiceKind); err != nil {
 		return err
 	}
 
 	rn := &resource.Resource{
-		Operation:      resource.WebhookSuffix,
+		Operation:      resource.ServiceSuffix,
 		ControllerName: r.kptFile.GetName(),
-		Name:           r.kptFile.GetName(),
+		Name:           r.fc.Spec.Name,
 		Namespace:      r.kptFile.GetNamespace(),
 		TargetDir:      r.TargetDir,
 		SubDir:         resource.WebhookDir,
-		NameKind:       resource.NameKindController,
-		PathNameKind:   resource.NameKindKind,
+		NameKind:       resource.NameKindKindResource,
+		PathNameKind:   resource.NameKindKindResource,
 	}
 
 	matchResources := map[string]*objInfo{
 		"Service": {
 			renderFn: rn.RenderService,
 		},
-		"Certificate": {
-			renderFn: rn.RenderCertificate,
-		},
-		"MutatingWebhookConfiguration": {
-			renderFn: rn.RenderMutatingWebhook,
-		},
-		"ValidatingWebhookConfiguration": {
-			renderFn: rn.RenderValidatingWebhook,
-		},
 	}
 
-	crdObjects := make([]extv1.CustomResourceDefinition, 0)
 	var podNode *yaml.RNode
 	for _, node := range r.pb.Nodes {
 		switch node.GetKind() {
-		case "CustomResourceDefinition":
-			crd := extv1.CustomResourceDefinition{}
-			if err := sigyaml.Unmarshal([]byte(node.MustString()), &crd); err != nil {
-				return err
-			}
-			crdObjects = append(crdObjects, crd)
 		case r.fc.Spec.Selector.Kind:
 			if found, err := r.validatePodContainer(node); err != nil {
 				return err
@@ -121,16 +103,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	for kind, objInfo := range matchResources {
 		if kind == "Service" {
 			for _, service := range r.fc.Spec.Services {
-				if err := objInfo.renderFn(service, crdObjects); err != nil {
+				if err := objInfo.renderFn(service, nil); err != nil {
 					return err
 				}
 			}
-		} else {
-			if err := objInfo.renderFn(r.fc.Spec, crdObjects); err != nil {
-				return err
-			}
 		}
-
 	}
 
 	switch r.fc.Spec.Selector.Kind {
@@ -142,36 +119,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		// update the labels with the service selctor key
 		x.Spec.Selector.MatchLabels[rn.GetLabelKey()] = rn.ControllerName
 		x.Spec.Template.Labels[rn.GetLabelKey()] = rn.ControllerName
-
-		found := false
-		vol := resource.BuildVolume(rn)
-		for _, volume := range x.Spec.Template.Spec.Volumes {
-			if volume.Name == vol.Name {
-				found = true
-				volume = vol
-			}
-		}
-		if !found {
-			x.Spec.Template.Spec.Volumes = append(x.Spec.Template.Spec.Volumes, vol)
-		}
-		for i, c := range x.Spec.Template.Spec.Containers {
-			if c.Name == r.fc.Spec.Selector.ContainerName {
-				found := false
-				volm := resource.BuildVolumeMount(rn)
-				for _, volumeMount := range c.VolumeMounts {
-					if volumeMount.Name == volm.Name {
-						found = true
-						volumeMount = volm
-					}
-				}
-				if !found {
-					if len(c.VolumeMounts) == 0 {
-						x.Spec.Template.Spec.Containers[i].VolumeMounts = make([]corev1.VolumeMount, 0, 1)
-					}
-					x.Spec.Template.Spec.Containers[i].VolumeMounts = append(x.Spec.Template.Spec.Containers[i].VolumeMounts, volm)
-				}
-			}
-		}
 
 		// the path must exist since we read the resource from the filesystem
 
@@ -236,7 +183,7 @@ func (r *Runner) validate(args []string, kind string) error {
 
 	cfg := config.New(r.pb, map[string]string{
 		kptv1.KptFileKind:            "",
-		kptgenv1alpha1.FnWebhookKind: filepath.Base(r.FnConfigPath),
+		kptgenv1alpha1.FnServiceKind: filepath.Base(r.FnConfigPath),
 	})
 
 	//fmt.Println("relative", filepath.Base(r.FnConfigPath))
@@ -250,11 +197,11 @@ func (r *Runner) validate(args []string, kind string) error {
 	if selectedNodes[kptgenv1alpha1.FnWebhookKind] == nil {
 		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
 	}
-	r.fnConfig = selectedNodes[kptgenv1alpha1.FnWebhookKind]
+	r.fnConfig = selectedNodes[kptgenv1alpha1.FnServiceKind]
 
 	//fmt.Println("fn config", r.fnConfig.MustString())
 
-	r.fc = kptgenv1alpha1.Webhook{}
+	r.fc = kptgenv1alpha1.Service{}
 	if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
 		return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
 	}

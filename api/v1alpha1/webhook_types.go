@@ -21,11 +21,6 @@ type WebhookSpec struct {
 	Certificate Certificate `json:"certificate,omitempty" yaml:"certificate,omitempty"`
 }
 
-type Service struct {
-	Port       int32 `json:"port,omitempty" yaml:"port,omitempty"`
-	TargetPort int32 `json:"targetPort,omitempty" yaml:"targetPort,omitempty"`
-}
-
 type Certificate struct {
 	IssuerRef string `json:"issuerRef,omitempty" yaml:"issuerRef,omitempty"`
 }
