@@ -107,7 +107,7 @@ func (r *Runner) validate(args []string, kind string) error {
 		kptgenv1alpha1.FnClusterRoleKind: filepath.Base(r.FnConfigPath),
 	})
 
-	fmt.Println("relative", filepath.Base(r.FnConfigPath))
+	//fmt.Println("relative", filepath.Base(r.FnConfigPath))
 
 	selectedNodes := cfg.Get()
 	if selectedNodes[kptv1.KptFileKind] == nil {
@@ -120,7 +120,7 @@ func (r *Runner) validate(args []string, kind string) error {
 	}
 	r.fnConfig = selectedNodes[kptgenv1alpha1.FnClusterRoleKind]
 
-	fmt.Println("fn config", r.fnConfig.MustString())
+	//fmt.Println("fn config", r.fnConfig.MustString())
 
 	r.fc = kptgenv1alpha1.ClusterRole{}
 	if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
