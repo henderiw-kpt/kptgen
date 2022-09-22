@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/henderiw-nephio/kptgen/commands/apply"
+	"github.com/henderiw-nephio/kptgen/commands/clone"
 	"github.com/henderiw-nephio/kptgen/commands/copy"
 	"github.com/spf13/cobra"
 )
@@ -12,8 +13,9 @@ import (
 func GetKptGenCommands(ctx context.Context, name, version string) []*cobra.Command {
 	var c []*cobra.Command
 	copyCmd := copy.NewCommand(ctx, name, version)
+	cloneCmd := clone.NewCommand(ctx, name, version)
 	applyCmd := apply.GetCommand(ctx, name, version)
 
-	c = append(c, copyCmd, applyCmd)
+	c = append(c, copyCmd, cloneCmd, applyCmd)
 	return c
 }

@@ -3,21 +3,21 @@ title: "`clone`"
 linkTitle: "clone"
 type: docs
 description: >
-  Clone copies some file from a git repo a target dir.
+  Clone copies the yaml files of a git repo to a target directory.
 ---
 
 <!--mdtogo:Short
-    Copy kubebuilder files to a package.
+    Clone copies the yaml files of a git repo to a target directory.
 -->
 
-`clone` copies files from a git repo to a kpt package.
+`clone` copies the yaml files of a git repo to a target directory.
 
 ### Synopsis
 
 <!--mdtogo:Long-->
 
 ```
-kptgen clone GIT_REPO TARGET_DIR [flags]
+kptgen clone GIT_REPO_URL TARGET_DIR [flags]
 ```
 
 #### Args
@@ -52,7 +52,7 @@ cd $TEST_HOME
 
 ```shell
 # Creates a new Kpt Package from kubebuilder manifest files.
-$ kptgen copy ./config ./blueprint/topology
+$ kptgen clone https://github.com/henderiw-kpt/kptgen-templates ./blueprint/topology
 ```
 
 <!--mdtogo-->
