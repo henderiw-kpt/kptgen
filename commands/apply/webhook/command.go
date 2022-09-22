@@ -62,7 +62,7 @@ type objInfo struct {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if err := r.validate(args); err != nil {
+	if err := r.validate(args, kptgenv1alpha1.FnWebhookKind); err != nil {
 		return err
 	}
 
@@ -206,7 +206,7 @@ func (r *Runner) validatePodContainer(node *yaml.RNode) (bool, error) {
 	return false, nil
 }
 
-func (r *Runner) validate(args []string) error {
+func (r *Runner) validate(args []string, kind string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("TARGET_DIR is required, positional arguments; %d provided", len(args))
 	}
@@ -240,7 +240,7 @@ func (r *Runner) validate(args []string) error {
 	}
 	r.kptFile = selectedNodes[0]
 	if selectedNodes[1] == nil {
-		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kptgenv1alpha1.FnClusterRoleKind, r.FnConfigPath)
+		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
 	}
 	r.fnConfig = selectedNodes[1]
 

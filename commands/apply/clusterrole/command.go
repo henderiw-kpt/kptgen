@@ -54,7 +54,7 @@ type Runner struct {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if err := r.validate(args); err != nil {
+	if err := r.validate(args, kptgenv1alpha1.FnClusterRoleKind); err != nil {
 		return err
 	}
 
@@ -78,7 +78,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Runner) validate(args []string) error {
+func (r *Runner) validate(args []string, kind string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("TARGET_DIR is required, positional arguments; %d provided", len(args))
 	}
