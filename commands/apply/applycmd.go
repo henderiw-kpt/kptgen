@@ -6,8 +6,8 @@ import (
 	"github.com/henderiw-nephio/kptgen/commands/apply/clusterrole"
 	"github.com/henderiw-nephio/kptgen/commands/apply/namespace"
 	"github.com/henderiw-nephio/kptgen/commands/apply/pod"
-	"github.com/henderiw-nephio/kptgen/commands/apply/webhook"
 	"github.com/henderiw-nephio/kptgen/commands/apply/service"
+	"github.com/henderiw-nephio/kptgen/commands/apply/webhook"
 	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
 	"github.com/spf13/cobra"
 )

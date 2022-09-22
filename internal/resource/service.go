@@ -25,14 +25,14 @@ func (rn *Resource) RenderService(cfg, obj interface{}) error {
 	svc.ObjectMeta.Namespace = rn.GetNameSpace()
 	if len(svc.ObjectMeta.Labels) == 0 {
 		svc.ObjectMeta.Labels = map[string]string{
-			rn.GetLabelKey(): rn.Name,
+			rn.GetLabelKey(): rn.ControllerName,
 		}
 	} else {
 		svc.ObjectMeta.Labels[rn.GetLabelKey()] = rn.Name
 	}
 	if len(svc.Spec.Selector) == 0 {
 		svc.Spec.Selector = map[string]string{
-			rn.GetLabelKey(): rn.Name,
+			rn.GetLabelKey(): rn.ControllerName,
 		}
 	} else {
 		svc.Spec.Selector[rn.GetLabelKey()] = rn.Name

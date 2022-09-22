@@ -17,17 +17,18 @@ initialize the kpt package
 ```
 export KPT_BLUEPRINT_DIR=./blueprint/admin3
 mkdir -p ${KPT_BLUEPRINT_DIR}
-kpt pkg clone ${KPT_BLUEPRINT_DIR} // clone the fn-config templates
+kpt pkg clone GIT_REPO_URL ${KPT_BLUEPRINT_DIR} // clone the fn-config templates
 set the namespace in the KptFile -> to be automated
 ```
 
 ```
-kptgen clone  ${KPT_BLUEPRINT_DIR} -> TODO
+kpt pkg clone GIT_REPO_URL ${KPT_BLUEPRINT_DIR} // clone the fn-config templates
 kptgen copy SOURCE_DIR ${KPT_BLUEPRINT_DIR}
 kptgen apply pod ${KPT_BLUEPRINT_DIR} --fn-config pod-fn-config.yaml
 kptgen apply webhook ${KPT_BLUEPRINT_DIR} --fn-config webhook-fn-config.yaml
 kptgen apply namespace ${KPT_BLUEPRINT_DIR}
 kptgen apply clusterole ${KPT_BLUEPRINT_DIR} --fn-config clusterrole-fn-config.
+kptgen apply service ${KPT_BLUEPRINT_DIR} --fn-config service-fn-config.
 ```
 
 TODO

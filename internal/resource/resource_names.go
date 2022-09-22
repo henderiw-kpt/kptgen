@@ -148,6 +148,9 @@ func (rn *Resource) GetValidatingWebhookName() string {
 }
 
 func (rn *Resource) GetLabelKey() string {
+	if rn.Operation == ServiceSuffix {
+		return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, strings.Join([]string{rn.Name, rn.Operation}, "-")}, "/")
+	}
 	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, rn.Operation}, "/")
 }
 

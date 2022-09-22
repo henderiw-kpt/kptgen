@@ -71,8 +71,8 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		Name:           r.fc.Spec.Name,
 		Namespace:      r.kptFile.GetNamespace(),
 		TargetDir:      r.TargetDir,
-		SubDir:         resource.WebhookDir,
-		NameKind:       resource.NameKindKindResource,
+		SubDir:         resource.ControllerDir,
+		NameKind:       resource.NameKindController,
 		PathNameKind:   resource.NameKindKindResource,
 	}
 
@@ -194,7 +194,7 @@ func (r *Runner) validate(args []string, kind string) error {
 	}
 	r.kptFile = selectedNodes[kptv1.KptFileKind]
 
-	if selectedNodes[kptgenv1alpha1.FnWebhookKind] == nil {
+	if selectedNodes[kptgenv1alpha1.FnServiceKind] == nil {
 		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
 	}
 	r.fnConfig = selectedNodes[kptgenv1alpha1.FnServiceKind]
