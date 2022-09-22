@@ -2,8 +2,7 @@
 
 kptgen is a tool to help build a kpt package. 
 
-kptgen uses a set of operations to build the kpt package.
-E.g.
+kptgen uses a set of operations to build the kpt package, such as:
 - kptgen copy: allows to copy files from a certain directory (used only for CRDs for now)
 - kptgen init: initializes the kpt package with a set of KRM fn-config templates, that can be used in the apply operations
 - kptgen apply pod: add the pod resources to the kpt package (deployment, statefullset, serviceaccount, services, roles, rolebindings, ...)
