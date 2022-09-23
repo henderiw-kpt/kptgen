@@ -23,5 +23,5 @@ func RenderNamespace(rn *Resource) error {
 		},
 	}
 
-	return fileutil.CreateFileFromRObject(NamespaceKind, rn.GetFilePath(""), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }

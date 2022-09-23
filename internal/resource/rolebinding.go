@@ -19,13 +19,13 @@ func (rn *Resource) RenderRoleBinding() error {
 			APIVersion: rbacv1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetName(),
+			Name:      rn.GetRoleBindingName(),
 			Namespace: rn.Namespace,
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
-				Name:      rn.GetControllerName(""),
+				Name:      rn.GetPackageResourceName(""),
 				Namespace: rn.Namespace,
 			},
 		},
@@ -36,5 +36,5 @@ func (rn *Resource) RenderRoleBinding() error {
 		},
 	}
 
-	return fileutil.CreateFileFromRObject(RoleBindingKind, rn.GetFilePath(RoleBindingSuffix), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }

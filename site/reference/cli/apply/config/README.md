@@ -1,23 +1,23 @@
 ---
-title: "`clusterrole`"
-linkTitle: "clusterrole"
+title: "`config`"
+linkTitle: "config"
 type: docs
 description: >
-  Add a clusterrole to the package.
+  Add a set of config to the kpt package.
 ---
 
 <!--mdtogo:Short
-    Add a clusterrole to the package.
+    Add a set of configuration specifed in the fn-config files to the package.
 -->
 
-`clusterrole` adds a clusterrole to the package.
+`config` adds a set of configuration specifed in the fn-config files to the package.
 
 ### Synopsis
 
 <!--mdtogo:Long-->
 
 ```
-kptgen apply clusterrole TARGET_DIR [flags]
+kptgen apply config TARGET_DIR [flags]
 ```
 
 #### Args
@@ -30,8 +30,8 @@ TARGET_DIR:
 #### Flags
 
 ```
---fn-config:
-  Path to the file containing `functionConfig` for the operation.
+--fn-config-dir:
+  Path to the fn-config dir containing `functionConfig` for the operation.
 ```
 
 <!--mdtogo-->
@@ -56,7 +56,7 @@ cd $TEST_HOME
 
 ```shell
 # Add a pod with the characteristics in the fn-config to the package
-$ kptgen apply clusterrole ./blueprint/admin --fn-config cluster-role-fn-config
+$ kptgen apply config ./blueprint/admin --fn-config-dir ./blueprint/admin/fn-config
 ```
 
 <!--mdtogo-->

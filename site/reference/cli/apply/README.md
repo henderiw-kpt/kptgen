@@ -1,6 +1,6 @@
 ---
-title: "`add`"
-linkTitle: "add"
+title: "`aply`"
+linkTitle: "apply"
 type: docs
 weight: 4
 description: >
@@ -12,5 +12,5 @@ description: >
 -->
 
 <!--mdtogo:Long-->
-The `add` command group contains subcommands for adding and transforming resources in a`kpt` package
+The `apply` command group contains subcommands for adding and transforming resources in a`kpt` package
 <!--mdtogo-->

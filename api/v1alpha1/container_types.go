@@ -28,5 +28,5 @@ type ContainerSpec struct {
 	Containers []corev1.Container `json:"containers,omitempty"`
 
 	// Services identifies the services the container exposes
-	Service []corev1.Service `json:"services,omitempty"`
+	Services []corev1.Service `json:"services,omitempty"`
 }

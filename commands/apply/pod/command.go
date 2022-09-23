@@ -2,20 +2,10 @@ package pod
 
 import (
 	"context"
-	"fmt"
 
-	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
 	docs "github.com/henderiw-kpt/kptgen/internal/docs/generated/applydocs"
-	"github.com/henderiw-kpt/kptgen/internal/resource"
-	"github.com/henderiw-kpt/kptgen/internal/util/config"
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
-	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
-	"github.com/henderiw-kpt/kptgen/internal/util/resourceutil"
+	"github.com/henderiw-kpt/kptgen/internal/pkgconfig"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
-	sigyaml "sigs.k8s.io/yaml"
 )
 
 // NewRunner returns a command runner.
@@ -45,90 +35,98 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 type Runner struct {
 	Command      *cobra.Command
 	FnConfigPath string
-	TargetDir    string
-	Ctx          context.Context
+	//TargetDir    string
+	Ctx context.Context
 	// dynamic input
-	pb      *kio.PackageBuffer
-	kptFile *yaml.RNode
+	//pb      *kio.PackageBuffer
+	//kptFile *yaml.RNode
 	//fnConfig *yaml.RNode
-	fc kptgenv1alpha1.Pod
+	//fc kptgenv1alpha1.Pod
+	pkgCfg pkgconfig.PkgConfig
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if err := r.validate(args, kptgenv1alpha1.FnPodKind); err != nil {
-		return err
-	}
-	//fmt.Printf("permission requests: %#v\n", r.fc.Spec.PermissionRequests)
-	//fmt.Printf("pod template: %#v\n", r.fc.Spec.PodTemplate)
-
-	crds, err := resourceutil.GetCRDs(r.pb)
+	var err error
+	r.pkgCfg, err = pkgconfig.New(args, r.FnConfigPath)
 	if err != nil {
 		return err
 	}
 
-	//fmt.Printf("crds: %#v\n", r.fc.Spec.PodTemplate)
+	if err := r.pkgCfg.Deploy(); err != nil {
+		return err
+	}
+	/*
+		if err := r.validate(args, kptgenv1alpha1.FnPodKind); err != nil {
+			return err
+		}
 
-	for roleName, rules := range r.fc.Spec.PermissionRequests {
+		crds, err := resourceutil.GetCRDs(r.pb)
+		if err != nil {
+			return err
+		}
+
+
+		for roleName, rules := range r.fc.Spec.PermissionRequests {
+			rn := &resource.Resource{
+				Operation:      resource.ControllerSuffix,
+				ControllerName: r.kptFile.GetName(),
+				Name:           roleName,
+				Namespace:      r.kptFile.GetNamespace(),
+				TargetDir:      r.TargetDir,
+				SubDir:         resource.RBACDir,
+				NameKind:       resource.NameKindResource,
+				PathNameKind:   resource.NameKindResource,
+			}
+
+			if roleName == kptgenv1alpha1.ControllerClusterRoleName {
+				if err := rn.RenderClusterRole(rules, crds); err != nil {
+					return err
+				}
+				if err := rn.RenderClusterRoleBinding(crds); err != nil {
+					return err
+				}
+			} else {
+				if err := rn.RenderRole(rules); err != nil {
+					return err
+				}
+				if err := rn.RenderRoleBinding(); err != nil {
+					return err
+				}
+			}
+		}
+
 		rn := &resource.Resource{
 			Operation:      resource.ControllerSuffix,
 			ControllerName: r.kptFile.GetName(),
-			Name:           roleName,
+			Name:           r.kptFile.GetName(),
 			Namespace:      r.kptFile.GetNamespace(),
 			TargetDir:      r.TargetDir,
-			SubDir:         resource.RBACDir,
-			NameKind:       resource.NameKindResource,
-			PathNameKind:   resource.NameKindResource,
+			SubDir:         resource.ControllerDir,
+			NameKind:       resource.NameKindController,
+			PathNameKind:   resource.NameKindKind,
 		}
 
-		if roleName == kptgenv1alpha1.ControllerClusterRoleName {
-			if err := rn.RenderClusterRole(rules, crds); err != nil {
-				return err
-			}
-			if err := rn.RenderClusterRoleBinding(crds); err != nil {
-				return err
-			}
-		} else {
-			if err := rn.RenderRole(rules); err != nil {
-				return err
-			}
-			if err := rn.RenderRoleBinding(); err != nil {
-				return err
-			}
-		}
-	}
-
-	rn := &resource.Resource{
-		Operation:      resource.ControllerSuffix,
-		ControllerName: r.kptFile.GetName(),
-		Name:           r.kptFile.GetName(),
-		Namespace:      r.kptFile.GetNamespace(),
-		TargetDir:      r.TargetDir,
-		SubDir:         resource.ControllerDir,
-		NameKind:       resource.NameKindController,
-		PathNameKind:   resource.NameKindKind,
-	}
-
-	if err := rn.RenderServiceAccount(r.fc.Spec); err != nil {
-		return err
-	}
-
-	switch r.fc.Spec.Type {
-	case kptgenv1alpha1.DeploymentTypeDeployment:
-		if err := rn.RenderDeployment(r.fc.Spec); err != nil {
+		if err := rn.RenderServiceAccount(r.fc.Spec); err != nil {
 			return err
 		}
-	case kptgenv1alpha1.DeploymentTypeStatefulset:
-		if err := rn.RenderProviderStatefulSet(r.fc.Spec); err != nil {
-			return err
-		}
-	}
 
-	for _, service := range r.fc.Spec.Services {
-		if err := rn.RenderService(service, nil); err != nil {
-			return err
+		switch r.fc.Spec.Type {
+		case kptgenv1alpha1.DeploymentTypeDeployment:
+			if err := rn.RenderDeployment(r.fc.Spec); err != nil {
+				return err
+			}
+		case kptgenv1alpha1.DeploymentTypeStatefulset:
+			if err := rn.RenderProviderStatefulSet(r.fc.Spec); err != nil {
+				return err
+			}
 		}
-	}
 
+		for _, service := range r.fc.Spec.Services {
+			if err := rn.RenderService(service, nil); err != nil {
+				return err
+			}
+		}
+	*/
 	// transform the clusterrolebinding and rolebindings
 	/*
 		matchKind := []string{"ClusterRoleBinding", "RoleBinding"}
@@ -209,6 +207,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return nil
 }
 
+/*
 func (r *Runner) validate(args []string, kind string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("TARGET_DIR is required, positional arguments; %d provided", len(args))
@@ -255,20 +254,8 @@ func (r *Runner) validate(args []string, kind string) error {
 	}
 	r.kptFile = selectedNodes[kptv1.KptFileKind]
 
-	/*
-		if selectedNodes[kptgenv1alpha1.FnPodKind] == nil {
-			return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
-		}
-		r.fnConfig = selectedNodes[kptgenv1alpha1.FnPodKind]
-	*/
 
-	//fmt.Println("fn config", r.fnConfig.MustString())
-
-	/*
-		r.fc = kptgenv1alpha1.Pod{}
-		if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
-			return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
-		}
-	*/
 	return nil
 }
+
+*/

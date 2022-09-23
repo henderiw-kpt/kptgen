@@ -17,7 +17,7 @@ description: >
 <!--mdtogo:Long-->
 
 ```
-kptgen add webhook TARGET_DIR [flags]
+kptgen apply webhook TARGET_DIR [flags]
 ```
 
 #### Args
@@ -56,7 +56,7 @@ cd $TEST_HOME
 
 ```shell
 # Add a pod with the characteristics in the fn-config to the package
-$ kptgen add webhook ./blueprint/admin --fn-config webhook-fn-config
+$ kptgen apply webhook ./blueprint/admin --fn-config webhook-fn-config
 ```
 
 <!--mdtogo-->

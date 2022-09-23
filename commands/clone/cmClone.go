@@ -50,7 +50,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	targetDir := args[1]
 
 	// check if target directory exists, if not create it
-	if err := fileutil.EnsureDir("TARGET_DIR", targetDir, true); err != nil {
+	if err := fileutil.EnsureDir(targetDir, true); err != nil {
 		return err
 	}
 
@@ -86,7 +86,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		fmt.Println(fp)
 		//fmt.Println(filepath.Base(newFp))
 
-		fileutil.EnsureDir("dummy", filepath.Dir(fp), true)
+		fileutil.EnsureDir(filepath.Dir(fp), true)
 		//fmt.Println(string(yamlFile))
 
 		//filepath.HasPrefix()

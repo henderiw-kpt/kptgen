@@ -17,7 +17,7 @@ description: >
 <!--mdtogo:Long-->
 
 ```
-kptgen add pod TARGET_DIR [flags]
+kptgen apply pod TARGET_DIR [flags]
 ```
 
 #### Args
@@ -56,7 +56,7 @@ cd $TEST_HOME
 
 ```shell
 # Add a pod with the characteristics in the fn-config to the package
-$ kptgen add pod ./blueprint/admin --fn-config pod-fn-config
+$ kptgen apply pod ./blueprint/admin --fn-config pod-fn-config
 ```
 
 <!--mdtogo-->

@@ -14,7 +14,7 @@ import (
 func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
 	rn.Kind = certv1.CertificateKind
 
-	info, ok := cfg.(*kptgenv1alpha1.WebhookSpec)
+	info, ok := cfg.(*kptgenv1alpha1.ConfigSpec)
 	if !ok {
 		return fmt.Errorf("wrong object in rendercertificate: %v", reflect.TypeOf(cfg))
 	}
@@ -40,5 +40,5 @@ func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
 		},
 	}
 
-	return fileutil.CreateFileFromRObject(certv1.CertificateKind, rn.GetFilePath(""), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }

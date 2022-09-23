@@ -74,7 +74,7 @@ func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) error {
 		Webhooks: webhooks,
 	}
 
-	return fileutil.CreateFileFromRObject(MutatingWebhookConfigurationKind, rn.GetFilePath(""), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }
 
 func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
@@ -133,5 +133,5 @@ func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
 		Webhooks: webhooks,
 	}
 
-	return fileutil.CreateFileFromRObject(ValidatingWebhookConfigurationKind, rn.GetFilePath(""), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }

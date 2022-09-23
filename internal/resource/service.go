@@ -25,14 +25,14 @@ func (rn *Resource) RenderService(cfg, obj interface{}) error {
 	svc.ObjectMeta.Namespace = rn.GetNameSpace()
 	if len(svc.ObjectMeta.Labels) == 0 {
 		svc.ObjectMeta.Labels = map[string]string{
-			rn.GetLabelKey(): rn.ControllerName,
+			rn.GetLabelKey(): rn.PackageName,
 		}
 	} else {
 		svc.ObjectMeta.Labels[rn.GetLabelKey()] = rn.Name
 	}
 	if len(svc.Spec.Selector) == 0 {
 		svc.Spec.Selector = map[string]string{
-			rn.GetLabelKey(): rn.ControllerName,
+			rn.GetLabelKey(): rn.PackageName,
 		}
 	} else {
 		svc.Spec.Selector[rn.GetLabelKey()] = rn.Name
@@ -47,5 +47,5 @@ func (rn *Resource) RenderService(cfg, obj interface{}) error {
 		Spec:       svc.Spec,
 	}
 
-	return fileutil.CreateFileFromRObject(ServiceKind, rn.GetFilePath(""), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }

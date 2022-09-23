@@ -42,19 +42,19 @@ func ResolveAbsAndRelPaths(path string) (string, string, error) {
 	return absPath, relPath, nil
 }
 
-func EnsureDir(originTag, dirName string, create bool) error {
+func EnsureDir(dirName string, create bool) error {
 	if _, err := os.Stat(dirName); err != nil {
 		if create {
 			err = os.MkdirAll(dirName, os.ModePerm)
 			if err != nil {
-				return fmt.Errorf("%s cannot create directory: %s", originTag, dirName)
+				return fmt.Errorf("cannot create directory: %s", dirName)
 			}
 		} else {
-			return fmt.Errorf("%s does not exist: %s", originTag, dirName)
+			return fmt.Errorf("does not exist: %s", dirName)
 		}
 	}
 	if stat, err := os.Stat(dirName); err == nil && !stat.IsDir() {
-		return fmt.Errorf("%s %s is not a directory", originTag, dirName)
+		return fmt.Errorf("%s is not a directory", dirName)
 	}
 	return nil
 }
@@ -142,14 +142,14 @@ func ResourcesToPackageBuffer(resources map[string]string, match []string) (*kio
 	return &pb, nil
 }
 
-func CreateFileFromRObject(originTag, fp string, x runtime.Object) error {
+func CreateFileFromRObject(fp string, x runtime.Object) error {
 	b := new(strings.Builder)
 	p := printers.YAMLPrinter{}
 	if err := p.PrintObj(x, b); err != nil {
 		return err
 	}
 
-	if err := EnsureDir(originTag, filepath.Dir(fp), true); err != nil {
+	if err := EnsureDir(filepath.Dir(fp), true); err != nil {
 		return err
 	}
 
@@ -160,14 +160,14 @@ func CreateFileFromRObject(originTag, fp string, x runtime.Object) error {
 	return nil
 }
 
-func UpdateFileFromRObject(originTag, fp string, x runtime.Object) error {
+func UpdateFileFromRObject(fp string, x runtime.Object) error {
 	b := new(strings.Builder)
 	p := printers.YAMLPrinter{}
 	if err := p.PrintObj(x, b); err != nil {
 		return err
 	}
 
-	if err := EnsureDir(originTag, filepath.Dir(fp), true); err != nil {
+	if err := EnsureDir(filepath.Dir(fp), true); err != nil {
 		return err
 	}
 
@@ -194,7 +194,7 @@ func CreateFileFromRNode(targetDir string, node *yaml.RNode) error {
 	}
 
 	fp := filepath.Join(targetDir, fileName)
-	if err := EnsureDir("TARGET_DIR", filepath.Dir(fp), true); err != nil {
+	if err := EnsureDir(filepath.Dir(fp), true); err != nil {
 		return err
 	}
 	// clear annotations

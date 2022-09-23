@@ -46,12 +46,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	targetDir := args[1]
 
 	// check if src directory exists but dont create it
-	if err := fileutil.EnsureDir("SOURCE_DIR", sourceDir, false); err != nil {
+	if err := fileutil.EnsureDir(sourceDir, false); err != nil {
 		return err
 	}
 
 	// check if target directory exists, if not create it
-	if err := fileutil.EnsureDir("TARGET_DIR", targetDir, true); err != nil {
+	if err := fileutil.EnsureDir(targetDir, true); err != nil {
 		return err
 	}
 

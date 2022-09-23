@@ -41,7 +41,7 @@ func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}
 		Rules: rules,
 	}
 
-	return fileutil.CreateFileFromRObject(ClusterRoleKind, rn.GetFilePath(RoleSuffix), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }
 
 func getCRDPolicyRules(crds []extv1.CustomResourceDefinition) []rbacv1.PolicyRule {

@@ -17,7 +17,7 @@ description: >
 <!--mdtogo:Long-->
 
 ```
-kptgen add namespace TARGET_DIR [flags]
+kptgen apply namespace TARGET_DIR [flags]
 ```
 
 #### Args
@@ -49,7 +49,7 @@ cd $TEST_HOME
 
 ```shell
 # Add a namespace to the package
-$ kptgen add namespace ./blueprint/admin 
+$ kptgen apply namespace ./blueprint/admin 
 ```
 
 <!--mdtogo-->

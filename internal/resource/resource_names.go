@@ -14,6 +14,7 @@ const (
 	NamespaceDir            = "namespace"
 	RBACDir                 = "rbac"
 	ControllerSuffix        = "controller"
+	PodSuffix               = "pod"
 	NamespaceSuffix         = "namespace"
 	BindingSuffix           = "binding"
 	RoleSuffix              = "role"
@@ -29,35 +30,35 @@ const (
 
 type Resource struct {
 	//Prefix    string
-	Operation      string
-	NameKind       NameKind
-	PathNameKind   NameKind
-	ControllerName string // name of the controller/project name
-	Name           string // name of the resource
-	Namespace      string
-	TargetDir      string
-	SubDir         string
-	Kind           string
+	Operation    string
+	NameKind     NameKind
+	PathNameKind NameKind
+	PackageName  string // name of the controller/project name
+	Name         string // name of the resource
+	Namespace    string
+	TargetDir    string
+	SubDir       string
+	Kind         string
 }
 
 type NameKind string
 
 const (
-	NameKindController         NameKind = "controller"
-	NameKindResource           NameKind = "resource"
-	NameKindControllerResource NameKind = "controllerResource"
-	NameKindKind               NameKind = "kind"
-	NameKindKindResource       NameKind = "kindResource"
+	NameKindPackage         NameKind = "package"
+	NameKindResource        NameKind = "resource"
+	NameKindPackageResource NameKind = "packageResource"
+	NameKindKind            NameKind = "kind"
+	NameKindKindResource    NameKind = "kindResource"
 )
 
 func (rn *Resource) GetName() string {
 	switch rn.NameKind {
-	case NameKindController:
-		return rn.GetControllerName("")
+	case NameKindPackage:
+		return rn.GetPackageName("")
 	case NameKindResource:
 		return rn.GetResourceName("")
-	case NameKindControllerResource:
-		return rn.GetResourceControllerName("")
+	case NameKindPackageResource:
+		return rn.GetPackageResourceName("")
 	case NameKindKind:
 		return rn.GetKindName("")
 	}
@@ -66,12 +67,12 @@ func (rn *Resource) GetName() string {
 
 func (rn *Resource) GetFileName(extraSuffix string) string {
 	switch rn.PathNameKind {
-	case NameKindController:
-		return rn.GetControllerName(extraSuffix)
+	case NameKindPackage:
+		return rn.GetPackageName(extraSuffix)
 	case NameKindResource:
 		return rn.GetResourceName(extraSuffix)
-	case NameKindControllerResource:
-		return rn.GetResourceControllerName(extraSuffix)
+	case NameKindPackageResource:
+		return rn.GetPackageResourceName(extraSuffix)
 	case NameKindKind:
 		return rn.GetKindName(extraSuffix)
 	case NameKindKindResource:
@@ -88,11 +89,11 @@ func (rn *Resource) GetNameSpace() string {
 	return rn.Namespace
 }
 
-func (rn *Resource) GetControllerName(extraSuffix string) string {
+func (rn *Resource) GetPackageName(extraSuffix string) string {
 	if extraSuffix != "" {
-		return strings.Join([]string{rn.ControllerName, ControllerSuffix, extraSuffix}, "-")
+		return strings.Join([]string{rn.PackageName, extraSuffix}, "-")
 	}
-	return strings.Join([]string{rn.ControllerName, ControllerSuffix}, "-")
+	return strings.Join([]string{rn.PackageName}, "-")
 }
 
 func (rn *Resource) GetResourceName(extraSuffix string) string {
@@ -116,11 +117,11 @@ func (rn *Resource) GetKindResourceName(extraSuffix string) string {
 	return strings.Join([]string{rn.Kind, rn.Name}, "-")
 }
 
-func (rn *Resource) GetResourceControllerName(extraSuffix string) string {
+func (rn *Resource) GetPackageResourceName(extraSuffix string) string {
 	if extraSuffix != "" {
-		return strings.Join([]string{rn.ControllerName, rn.Name, ControllerSuffix, extraSuffix}, "-")
+		return strings.Join([]string{rn.PackageName, rn.Name, extraSuffix}, "-")
 	}
-	return strings.Join([]string{rn.ControllerName, rn.Name, ControllerSuffix}, "-")
+	return strings.Join([]string{rn.PackageName, rn.Name}, "-")
 }
 
 func (rn *Resource) GetRoleName() string {

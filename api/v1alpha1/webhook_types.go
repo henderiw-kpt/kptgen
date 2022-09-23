@@ -20,13 +20,3 @@ type WebhookSpec struct {
 	// sertifcate
 	Certificate Certificate `json:"certificate,omitempty" yaml:"certificate,omitempty"`
 }
-
-type Certificate struct {
-	IssuerRef string `json:"issuerRef,omitempty" yaml:"issuerRef,omitempty"`
-}
-
-type Selector struct {
-	Kind          string `json:"kind,omitempty" yaml:"kind,omitempty"`
-	Name          string `json:"name,omitempty" yaml:"name,omitempty"`
-	ContainerName string `json:"containerName,omitempty" yaml:"containerName,omitempty"`
-}

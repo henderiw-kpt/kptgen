@@ -17,7 +17,7 @@ description: >
 <!--mdtogo:Long-->
 
 ```
-kptgen add service TARGET_DIR [flags]
+kptgen apply service TARGET_DIR [flags]
 ```
 
 #### Args
@@ -56,7 +56,7 @@ cd $TEST_HOME
 
 ```shell
 # Add a service with the characteristics in the fn-config to the package
-$ kptgen add service ./blueprint/admin --fn-config service-fn-config
+$ kptgen apply service ./blueprint/admin --fn-config service-fn-config
 ```
 
 <!--mdtogo-->

@@ -4,4 +4,5 @@ const (
 	FnConfigGroup      = "fn.kptgen.dev"
 	FnConfigVersion    = "v1alpha1"
 	FnConfigAPIVersion = FnConfigGroup + "/" + FnConfigVersion
+	DummyFnConfig      = "fn.kptgen.dev/dummy"
 )

@@ -2,17 +2,11 @@ package namespace
 
 import (
 	"context"
-	"fmt"
 
-	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
 	docs "github.com/henderiw-kpt/kptgen/internal/docs/generated/applydocs"
-	"github.com/henderiw-kpt/kptgen/internal/resource"
-	"github.com/henderiw-kpt/kptgen/internal/util/config"
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
-	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
+	"github.com/henderiw-kpt/kptgen/internal/pkgconfig"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // NewRunner returns a command runner.
@@ -38,37 +32,51 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 }
 
 type Runner struct {
-	Command   *cobra.Command
-	TargetDir string
-	Ctx       context.Context
+	Command *cobra.Command
+	//TargetDir string
+	Ctx context.Context
 	// dynamic input
-	pb      *kio.PackageBuffer
-	kptFile *yaml.RNode
+	//pb      *kio.PackageBuffer
+	//kptFile *yaml.RNode
+	pkgCfg pkgconfig.PkgConfig
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if err := r.validate(args, "Namespace"); err != nil {
+	var err error
+	// namespace is used as a dummyFnCOnfig
+	r.pkgCfg, err = pkgconfig.New(args, kptgenv1alpha1.DummyFnConfig)
+	if err != nil {
 		return err
 	}
 
-	rn := &resource.Resource{
-		Operation:      resource.NamespaceSuffix,
-		ControllerName: r.kptFile.GetName(),
-		Name:           r.kptFile.GetName(),
-		Namespace:      r.kptFile.GetNamespace(),
-		TargetDir:      r.TargetDir,
-		SubDir:         resource.NamespaceDir,
-		NameKind:       resource.NameKindResource,
-		PathNameKind:   resource.NameKindKind,
-	}
-
-	if err := resource.RenderNamespace(rn); err != nil {
+	if err := r.pkgCfg.Deploy(); err != nil {
 		return err
 	}
 
+	/*
+		if err := r.validate(args, "Namespace"); err != nil {
+			return err
+		}
+
+		rn := &resource.Resource{
+			Operation:      resource.NamespaceSuffix,
+			ControllerName: r.kptFile.GetName(),
+			Name:           r.kptFile.GetName(),
+			Namespace:      r.kptFile.GetNamespace(),
+			TargetDir:      r.TargetDir,
+			SubDir:         resource.NamespaceDir,
+			NameKind:       resource.NameKindResource,
+			PathNameKind:   resource.NameKindKind,
+		}
+
+		if err := resource.RenderNamespace(rn); err != nil {
+			return err
+		}
+	*/
 	return nil
 }
 
+/*
 func (r *Runner) validate(args []string, kind string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("TARGET_DIR is required, positional arguments; %d provided", len(args))
@@ -76,7 +84,7 @@ func (r *Runner) validate(args []string, kind string) error {
 
 	r.TargetDir = args[0]
 
-	if err := fileutil.EnsureDir("TARGET_DIR", r.TargetDir, true); err != nil {
+	if err := fileutil.EnsureDir(r.TargetDir, true); err != nil {
 		return err
 	}
 
@@ -100,3 +108,4 @@ func (r *Runner) validate(args []string, kind string) error {
 
 	return nil
 }
+*/

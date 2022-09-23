@@ -3,12 +3,12 @@ package applydocs
 
 var ApplyShort = `Add and transform KRM resources in the package.`
 var ApplyLong = `
-The ` + "`" + `add` + "`" + ` command group contains subcommands for adding and transforming resources in a` + "`" + `kpt` + "`" + ` package
+The ` + "`" + `apply` + "`" + ` command group contains subcommands for adding and transforming resources in a` + "`" + `kpt` + "`" + ` package
 `
 
-var ClusterroleShort = `Add a pod to the package.`
+var ClusterroleShort = `Add a clusterrole to the package.`
 var ClusterroleLong = `
-  kptgen add clusterrole TARGET_DIR [flags]
+  kptgen apply clusterrole TARGET_DIR [flags]
 
 Args:
 
@@ -23,12 +23,32 @@ Flags:
 var ClusterroleExamples = `
 
   # Add a pod with the characteristics in the fn-config to the package
-  $ kptgen add clusterrole ./blueprint/admin --fn-config cluster-role-fn-config
+  $ kptgen apply clusterrole ./blueprint/admin --fn-config cluster-role-fn-config
+`
+
+var ConfigShort = `Add a set of configuration specifed in the fn-config files to the package.`
+var ConfigLong = `
+  kptgen apply config TARGET_DIR [flags]
+
+Args:
+
+  TARGET_DIR:
+    The target directory of the package
+
+Flags:
+
+  --fn-config-dir:
+    Path to the fn-config dir containing ` + "`" + `functionConfig` + "`" + ` for the operation.
+`
+var ConfigExamples = `
+
+  # Add a pod with the characteristics in the fn-config to the package
+  $ kptgen apply config ./blueprint/admin --fn-config-dir ./blueprint/admin/fn-config
 `
 
 var NamespaceShort = `Add a namespace to the package.`
 var NamespaceLong = `
-  kptgen add namespace TARGET_DIR [flags]
+  kptgen apply namespace TARGET_DIR [flags]
 
 Args:
 
@@ -38,12 +58,12 @@ Args:
 var NamespaceExamples = `
 
   # Add a namespace to the package
-  $ kptgen add namespace ./blueprint/admin 
+  $ kptgen apply namespace ./blueprint/admin 
 `
 
 var PodShort = `Add a pod to the package.`
 var PodLong = `
-  kptgen add pod TARGET_DIR [flags]
+  kptgen apply pod TARGET_DIR [flags]
 
 Args:
 
@@ -58,12 +78,12 @@ Flags:
 var PodExamples = `
 
   # Add a pod with the characteristics in the fn-config to the package
-  $ kptgen add pod ./blueprint/admin --fn-config pod-fn-config
+  $ kptgen apply pod ./blueprint/admin --fn-config pod-fn-config
 `
 
 var ServiceShort = `Add a service to the package.`
 var ServiceLong = `
-  kptgen add service TARGET_DIR [flags]
+  kptgen apply service TARGET_DIR [flags]
 
 Args:
 
@@ -78,12 +98,12 @@ Flags:
 var ServiceExamples = `
 
   # Add a service with the characteristics in the fn-config to the package
-  $ kptgen add service ./blueprint/admin --fn-config service-fn-config
+  $ kptgen apply service ./blueprint/admin --fn-config service-fn-config
 `
 
 var WebhookShort = `Add a webhook to the package.`
 var WebhookLong = `
-  kptgen add webhook TARGET_DIR [flags]
+  kptgen apply webhook TARGET_DIR [flags]
 
 Args:
 
@@ -98,5 +118,5 @@ Flags:
 var WebhookExamples = `
 
   # Add a pod with the characteristics in the fn-config to the package
-  $ kptgen add webhook ./blueprint/admin --fn-config webhook-fn-config
+  $ kptgen apply webhook ./blueprint/admin --fn-config webhook-fn-config
 `

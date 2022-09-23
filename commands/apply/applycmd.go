@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/henderiw-kpt/kptgen/commands/apply/clusterrole"
+	"github.com/henderiw-kpt/kptgen/commands/apply/config"
 	"github.com/henderiw-kpt/kptgen/commands/apply/namespace"
 	"github.com/henderiw-kpt/kptgen/commands/apply/pod"
 	"github.com/henderiw-kpt/kptgen/commands/apply/service"
@@ -36,6 +37,7 @@ func GetCommand(ctx context.Context, name, version string) *cobra.Command {
 		namespace.NewCommand(ctx, version),
 		clusterrole.NewCommand(ctx, version),
 		service.NewCommand(ctx, version),
+		config.NewCommand(ctx, version),
 		//container.GetCommand(ctx, version),
 		//metrics.GetCommand(ctx, "", version),
 	)

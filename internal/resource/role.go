@@ -25,5 +25,5 @@ func (rn *Resource) RenderRole(rules []rbacv1.PolicyRule) error {
 		Rules: rules,
 	}
 
-	return fileutil.CreateFileFromRObject(RoleKind, rn.GetFilePath(RoleSuffix), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }

@@ -20,11 +20,11 @@ func (rn *Resource) RenderServiceAccount(fc *kptgenv1alpha1.PodSpec) error {
 			APIVersion: corev1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetControllerName(""),
+			Name:      rn.GetPackageResourceName(""),
 			Namespace: rn.Namespace,
 		},
 	}
 
-	return fileutil.CreateFileFromRObject(ServiceAccountKind, rn.GetFilePath(""), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 
 }

@@ -14,7 +14,7 @@ const (
 func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) error {
 	rn.Kind = StatefullSetKind
 
-	fc.PodTemplate.Spec.ServiceAccountName = rn.GetControllerName("")
+	fc.PodTemplate.Spec.ServiceAccountName = rn.GetPackageResourceName("")
 	fc.PodTemplate.ObjectMeta.Name = rn.GetName()
 	fc.PodTemplate.ObjectMeta.Namespace = rn.GetNameSpace()
 	if len(fc.PodTemplate.ObjectMeta.Labels) == 0 {
@@ -45,5 +45,5 @@ func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) error 
 		},
 	}
 
-	return fileutil.CreateFileFromRObject(StatefullSetKind, rn.GetFilePath(""), x)
+	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
 }

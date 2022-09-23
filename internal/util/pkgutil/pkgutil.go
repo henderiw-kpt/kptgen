@@ -3,6 +3,7 @@ package pkgutil
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -11,10 +12,22 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
-func GetPackage(sourceDir string, m []string) (*kio.PackageBuffer, error) {
-	files, err := fileutil.ReadFiles(sourceDir, true, m)
+func GetPackage(path string, m []string) (*kio.PackageBuffer, error) {
+
+	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return nil, err
+	}
+	var files []string
+	if fileInfo.IsDir() {
+		// this is a dir
+		files, err = fileutil.ReadFiles(path, true, m)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// this is a single file
+		files = []string{path}
 	}
 
 	inputs := []kio.Reader{}
