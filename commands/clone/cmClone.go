@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/clonedocs"
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
+	docs "github.com/henderiw-kpt/kptgen/internal/docs/generated/clonedocs"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	"github.com/spf13/cobra"
 )
 

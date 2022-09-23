@@ -31,7 +31,7 @@ vet: ## Run go vet against code.
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -ldflags "-X github.com/henderiw-nephio/kptgen/run.version=${GIT_COMMIT}" -o $(GOBIN)/kptgen -v .
+	go build -ldflags "-X github.com/henderiw-kpt/kptgen/run.version=${GIT_COMMIT}" -o $(GOBIN)/kptgen -v .
 
 ##@ Build Dependencies
 

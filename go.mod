@@ -1,4 +1,4 @@
-module github.com/henderiw-nephio/kptgen
+module github.com/henderiw-kpt/kptgen
 
 go 1.18
 

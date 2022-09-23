@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	kptgencommands "github.com/henderiw-nephio/kptgen/commands"
-	"github.com/henderiw-nephio/kptgen/internal/docs/generated/overview"
+	kptgencommands "github.com/henderiw-kpt/kptgen/commands"
+	"github.com/henderiw-kpt/kptgen/internal/docs/generated/overview"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )

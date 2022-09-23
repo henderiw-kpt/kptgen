@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
+	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
 	"github.com/stoewer/go-strcase"
 )
 

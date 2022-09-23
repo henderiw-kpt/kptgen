@@ -3,16 +3,15 @@ package pod
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
-	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
-	"github.com/henderiw-nephio/kptgen/internal/resource"
-	"github.com/henderiw-nephio/kptgen/internal/util/config"
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
-	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
-	"github.com/henderiw-nephio/kptgen/internal/util/resourceutil"
+	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
+	docs "github.com/henderiw-kpt/kptgen/internal/docs/generated/applydocs"
+	"github.com/henderiw-kpt/kptgen/internal/resource"
+	"github.com/henderiw-kpt/kptgen/internal/util/config"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/resourceutil"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -49,10 +48,10 @@ type Runner struct {
 	TargetDir    string
 	Ctx          context.Context
 	// dynamic input
-	pb       *kio.PackageBuffer
-	kptFile  *yaml.RNode
-	fnConfig *yaml.RNode
-	fc       kptgenv1alpha1.Pod
+	pb      *kio.PackageBuffer
+	kptFile *yaml.RNode
+	//fnConfig *yaml.RNode
+	fc kptgenv1alpha1.Pod
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
@@ -66,6 +65,8 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	//fmt.Printf("crds: %#v\n", r.fc.Spec.PodTemplate)
 
 	for roleName, rules := range r.fc.Spec.PermissionRequests {
 		rn := &resource.Resource{
@@ -223,6 +224,16 @@ func (r *Runner) validate(args []string, kind string) error {
 		return fmt.Errorf("a fn-config must be provided")
 	}
 
+	b, err := fileutil.ReadFile(r.FnConfigPath)
+	if err != nil {
+		return err
+	}
+
+	r.fc = kptgenv1alpha1.Pod{}
+	if err := sigyaml.Unmarshal(b, &r.fc); err != nil {
+		return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
+	}
+
 	// read only yml, yaml files and Kptfile
 	match := []string{"*.yaml", "*.yml", "Kptfile"}
 	pb, err := pkgutil.GetPackage(r.TargetDir, match)
@@ -232,33 +243,32 @@ func (r *Runner) validate(args []string, kind string) error {
 	r.pb = pb
 
 	cfg := config.New(r.pb, map[string]string{
-		kptv1.KptFileKind:        "",
-		kptgenv1alpha1.FnPodKind: filepath.Base(r.FnConfigPath),
+		kptv1.KptFileKind: "",
+		//kptgenv1alpha1.FnPodKind: filepath.Base(r.FnConfigPath),
 	})
 
 	//fmt.Println("relative", filepath.Base(r.FnConfigPath))
 
 	selectedNodes := cfg.Get()
-
-	//for kind, node := range selectedNodes {
-	//	fmt.Println("selectedNodes", kind, node)
-	//}
-
 	if selectedNodes[kptv1.KptFileKind] == nil {
 		return fmt.Errorf("kptFile must be provided -> run kpt pkg init <DIR>")
 	}
 	r.kptFile = selectedNodes[kptv1.KptFileKind]
 
-	if selectedNodes[kptgenv1alpha1.FnPodKind] == nil {
-		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
-	}
-	r.fnConfig = selectedNodes[kptgenv1alpha1.FnPodKind]
+	/*
+		if selectedNodes[kptgenv1alpha1.FnPodKind] == nil {
+			return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
+		}
+		r.fnConfig = selectedNodes[kptgenv1alpha1.FnPodKind]
+	*/
 
 	//fmt.Println("fn config", r.fnConfig.MustString())
 
-	r.fc = kptgenv1alpha1.Pod{}
-	if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
-		return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
-	}
+	/*
+		r.fc = kptgenv1alpha1.Pod{}
+		if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
+			return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
+		}
+	*/
 	return nil
 }

@@ -3,9 +3,9 @@ package commands
 import (
 	"context"
 
-	"github.com/henderiw-nephio/kptgen/commands/apply"
-	"github.com/henderiw-nephio/kptgen/commands/clone"
-	"github.com/henderiw-nephio/kptgen/commands/copy"
+	"github.com/henderiw-kpt/kptgen/commands/apply"
+	"github.com/henderiw-kpt/kptgen/commands/clone"
+	"github.com/henderiw-kpt/kptgen/commands/copy"
 	"github.com/spf13/cobra"
 )
 

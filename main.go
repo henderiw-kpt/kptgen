@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/henderiw-nephio/kptgen/run"
+	"github.com/henderiw-kpt/kptgen/run"
 	"github.com/spf13/cobra"
 	"k8s.io/component-base/cli"
 	"k8s.io/klog"

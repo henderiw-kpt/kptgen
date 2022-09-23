@@ -1,7 +1,7 @@
 package resource
 
 import (
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

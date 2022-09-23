@@ -46,8 +46,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/henderiw-nephio/kptgen/mdtogo/cmddocs"
-	"github.com/henderiw-nephio/kptgen/mdtogo/common"
+	"github.com/henderiw-kpt/kptgen/mdtogo/cmddocs"
+	"github.com/henderiw-kpt/kptgen/mdtogo/common"
 )
 
 var recursive bool

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )

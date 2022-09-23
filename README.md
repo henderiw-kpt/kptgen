@@ -17,7 +17,7 @@ initialize the kpt package
 ```
 export KPT_BLUEPRINT_DIR=./blueprint/admin3
 mkdir -p ${KPT_BLUEPRINT_DIR}
-kpt pkg clone GIT_REPO_URL ${KPT_BLUEPRINT_DIR} // clone the fn-config templates
+kpt init ${KPT_BLUEPRINT_DIR}
 set the namespace in the KptFile -> to be automated
 ```
 

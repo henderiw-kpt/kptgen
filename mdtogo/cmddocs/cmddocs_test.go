@@ -20,7 +20,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/henderiw-nephio/kptgen/mdtogo/cmddocs"
+	"github.com/henderiw-kpt/kptgen/mdtogo/cmddocs"
 	"github.com/stretchr/testify/assert"
 )
 

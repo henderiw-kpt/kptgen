@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	"github.com/yndd/ndd-runtime/pkg/utils"
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"

@@ -19,7 +19,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/henderiw-nephio/kptgen/mdtogo/common"
+	"github.com/henderiw-kpt/kptgen/mdtogo/common"
 	"github.com/stretchr/testify/assert"
 )
 

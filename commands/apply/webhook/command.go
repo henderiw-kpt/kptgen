@@ -3,15 +3,14 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
-	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
-	"github.com/henderiw-nephio/kptgen/internal/resource"
-	"github.com/henderiw-nephio/kptgen/internal/util/config"
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
-	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
+	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
+	docs "github.com/henderiw-kpt/kptgen/internal/docs/generated/applydocs"
+	"github.com/henderiw-kpt/kptgen/internal/resource"
+	"github.com/henderiw-kpt/kptgen/internal/util/config"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
 	"github.com/spf13/cobra"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -52,10 +51,10 @@ type Runner struct {
 	TargetDir    string
 	Ctx          context.Context
 	// dynamic input
-	pb       *kio.PackageBuffer
-	kptFile  *yaml.RNode
-	fnConfig *yaml.RNode
-	fc       kptgenv1alpha1.Webhook
+	pb      *kio.PackageBuffer
+	kptFile *yaml.RNode
+	//fnConfig *yaml.RNode
+	fc kptgenv1alpha1.Webhook
 }
 
 type objInfo struct {
@@ -226,7 +225,17 @@ func (r *Runner) validate(args []string, kind string) error {
 		return fmt.Errorf("a fn-config must be provided")
 	}
 
-	// read only yml, yaml files and Kptfile
+	b, err := fileutil.ReadFile(r.FnConfigPath)
+	if err != nil {
+		return err
+	}
+
+	r.fc = kptgenv1alpha1.Webhook{}
+	if err := sigyaml.Unmarshal(b, &r.fc); err != nil {
+		return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
+	}
+
+	// read only Kptfile
 	match := []string{"*.yaml", "*.yml", "Kptfile"}
 	pb, err := pkgutil.GetPackage(r.TargetDir, match)
 	if err != nil {
@@ -235,8 +244,8 @@ func (r *Runner) validate(args []string, kind string) error {
 	r.pb = pb
 
 	cfg := config.New(r.pb, map[string]string{
-		kptv1.KptFileKind:            "",
-		kptgenv1alpha1.FnWebhookKind: filepath.Base(r.FnConfigPath),
+		kptv1.KptFileKind: "",
+		//kptgenv1alpha1.FnWebhookKind: filepath.Base(r.FnConfigPath),
 	})
 
 	//fmt.Println("relative", filepath.Base(r.FnConfigPath))
@@ -247,16 +256,18 @@ func (r *Runner) validate(args []string, kind string) error {
 	}
 	r.kptFile = selectedNodes[kptv1.KptFileKind]
 
-	if selectedNodes[kptgenv1alpha1.FnWebhookKind] == nil {
-		return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
-	}
-	r.fnConfig = selectedNodes[kptgenv1alpha1.FnWebhookKind]
+	/*
+		if selectedNodes[kptgenv1alpha1.FnWebhookKind] == nil {
+			return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
+		}
+		r.fnConfig = selectedNodes[kptgenv1alpha1.FnWebhookKind]
 
-	//fmt.Println("fn config", r.fnConfig.MustString())
+		//fmt.Println("fn config", r.fnConfig.MustString())
 
-	r.fc = kptgenv1alpha1.Webhook{}
-	if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
-		return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
-	}
+		r.fc = kptgenv1alpha1.Webhook{}
+		if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
+			return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
+		}
+	*/
 	return nil
 }

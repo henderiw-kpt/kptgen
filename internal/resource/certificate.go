@@ -6,8 +6,8 @@ import (
 
 	certv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	certmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
-	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
+	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

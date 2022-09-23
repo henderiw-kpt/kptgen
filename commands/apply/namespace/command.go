@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/applydocs"
-	"github.com/henderiw-nephio/kptgen/internal/resource"
-	"github.com/henderiw-nephio/kptgen/internal/util/config"
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
-	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
+	docs "github.com/henderiw-kpt/kptgen/internal/docs/generated/applydocs"
+	"github.com/henderiw-kpt/kptgen/internal/resource"
+	"github.com/henderiw-kpt/kptgen/internal/util/config"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -80,8 +80,8 @@ func (r *Runner) validate(args []string, kind string) error {
 		return err
 	}
 
-	// read only yml, yaml files and Kptfile
-	match := []string{"Kptfile"}
+	// read only Kptfile
+	match := []string{"*.yaml", "*.yml", "Kptfile"}
 	pb, err := pkgutil.GetPackage(r.TargetDir, match)
 	if err != nil {
 		return err

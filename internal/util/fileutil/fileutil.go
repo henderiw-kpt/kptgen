@@ -225,6 +225,10 @@ func GetPathFromRNode(node *yaml.RNode) string {
 	return fmt.Sprintf("%s.yaml", name)
 }
 
+func ReadFile(fileName string) ([]byte, error) {
+	return ioutil.ReadFile(fileName)
+}
+
 // GetRelativePath returns the path which kioutil would return
 // the relative path in the package, used for comparisons
 func GetRelativePath(targetDir, fp string) string {

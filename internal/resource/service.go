@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

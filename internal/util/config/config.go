@@ -2,8 +2,8 @@ package config
 
 import (
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	kptgenv1alpha1 "github.com/henderiw-nephio/kptgen/api/v1alpha1"
-	"github.com/henderiw-nephio/kptgen/internal/util/resid"
+	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
+	"github.com/henderiw-kpt/kptgen/internal/util/resid"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"

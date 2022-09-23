@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	docs "github.com/henderiw-nephio/kptgen/internal/docs/generated/copydocs"
-	"github.com/henderiw-nephio/kptgen/internal/util/fileutil"
-	"github.com/henderiw-nephio/kptgen/internal/util/pkgutil"
+	docs "github.com/henderiw-kpt/kptgen/internal/docs/generated/copydocs"
+	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
+	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
 	"github.com/spf13/cobra"
 )
 
