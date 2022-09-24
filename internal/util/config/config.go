@@ -3,9 +3,9 @@ package config
 import (
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
-	"github.com/henderiw-kpt/kptgen/internal/util/resid"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -38,7 +38,7 @@ func New(pb *kio.PackageBuffer, selectors map[string]string) Config {
 		Pb:        pb,
 		Selectors: make(map[string]resid.ResId, len(selectors)),
 	}
-	for kind, fileName := range selectors {
+	for kind := range selectors {
 		if kind == kptv1.KptFileKind {
 			c.Selectors[kind] = resid.ResId{
 				Gvk: resid.Gvk{
@@ -55,7 +55,6 @@ func New(pb *kio.PackageBuffer, selectors map[string]string) Config {
 					Version: kptgenv1alpha1.FnConfigVersion,
 					Kind:    kind,
 				},
-				FileName: fileName,
 			}
 		}
 	}

@@ -20,7 +20,7 @@ func (rn *Resource) RenderServiceAccount(fc *kptgenv1alpha1.PodSpec) error {
 			APIVersion: corev1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetPackageResourceName(""),
+			Name:      rn.GetServiceAccountName(),
 			Namespace: rn.Namespace,
 		},
 	}

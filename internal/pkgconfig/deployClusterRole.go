@@ -18,14 +18,14 @@ func (r *pkgConfig) deployClusterRole(node *yaml.RNode) error {
 	for roleName, rules := range fnCfg.Spec.PermissionRequests {
 		//fmt.Printf("permission requests: %s %#v\n", name, rules)
 		rn := &resource.Resource{
-			Operation:    resource.ClusterRoleKind,
-			PackageName:  r.kptFile.GetName(),
-			Name:         roleName,
-			Namespace:    r.kptFile.GetNamespace(),
-			TargetDir:    r.targetDir,
-			SubDir:       resource.RBACDir,
-			NameKind:     resource.NameKindPackageResource,
-			PathNameKind: resource.NameKindKindResource,
+			Kind:        kptgenv1alpha1.FnClusterRoleKind,
+			PackageName: r.kptFile.GetName(),
+			Name:        roleName,
+			Namespace:   r.kptFile.GetNamespace(),
+			TargetDir:   r.targetDir,
+			SubDir:      resource.RBACDir,
+			//NameKind:     resource.NameKindPackageResource,
+			//PathNameKind: resource.NameKindKindResource,
 		}
 
 		if err := rn.RenderClusterRole(rules, nil); err != nil {

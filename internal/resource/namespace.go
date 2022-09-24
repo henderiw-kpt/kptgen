@@ -10,7 +10,7 @@ const (
 	NamespaceKind = "Namespace"
 )
 
-func RenderNamespace(rn *Resource) error {
+func (rn *Resource) RenderNamespace() error {
 	rn.Kind = NamespaceKind
 
 	x := &corev1.Namespace{
@@ -19,7 +19,7 @@ func RenderNamespace(rn *Resource) error {
 			APIVersion: corev1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: rn.Namespace,
+			Name: rn.GetNameSpace(),
 		},
 	}
 

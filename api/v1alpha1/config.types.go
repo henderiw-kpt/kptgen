@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 const (
@@ -19,6 +20,9 @@ type ConfigSpec struct {
 
 	// webhook
 	Webhook bool `json:"webhook,omitempty" yaml:"webhook,omitempty"`
+
+	// volume
+	Volume bool `json:"volume,omitempty" yaml:"volume,omitempty"`
 
 	// service
 	Services []corev1.Service `json:"services,omitempty" yaml:"services,omitempty"`
@@ -42,10 +46,8 @@ type Certificate struct {
 }
 
 type Selector struct {
-	Group         string `json:"group,omitempty" yaml:"group,omitempty"`
-	Version       string `json:"version,omitempty" yaml:"version,omitempty"`
-	Kind          string `json:"kind,omitempty" yaml:"kind,omitempty"`
-	Name          string `json:"name,omitempty" yaml:"name,omitempty"`
-	Namespace     string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	// ResId refers to a GVKN/Ns of a resource.
+	resid.ResId `json:",inline,omitempty" yaml:",inline,omitempty"`
+
 	ContainerName string `json:"containerName,omitempty" yaml:"containerName,omitempty"`
 }

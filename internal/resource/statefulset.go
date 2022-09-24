@@ -14,8 +14,8 @@ const (
 func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) error {
 	rn.Kind = StatefullSetKind
 
-	fc.PodTemplate.Spec.ServiceAccountName = rn.GetPackageResourceName("")
-	fc.PodTemplate.ObjectMeta.Name = rn.GetName()
+	fc.PodTemplate.Spec.ServiceAccountName = rn.GetServiceAccountName()
+	fc.PodTemplate.ObjectMeta.Name = rn.GetResourceName()
 	fc.PodTemplate.ObjectMeta.Namespace = rn.GetNameSpace()
 	if len(fc.PodTemplate.ObjectMeta.Labels) == 0 {
 		fc.PodTemplate.ObjectMeta.Labels = map[string]string{
@@ -31,7 +31,7 @@ func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) error 
 			APIVersion: appsv1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetName(),
+			Name:      rn.GetResourceName(),
 			Namespace: rn.GetNameSpace(),
 		},
 		Spec: appsv1.StatefulSetSpec{

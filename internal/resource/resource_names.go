@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -30,129 +31,101 @@ const (
 
 type Resource struct {
 	//Prefix    string
-	Operation    string
-	NameKind     NameKind
-	PathNameKind NameKind
-	PackageName  string // name of the controller/project name
-	Name         string // name of the resource
-	Namespace    string
-	TargetDir    string
-	SubDir       string
-	Kind         string
+	Kind string
+	//NameKind     NameKind // used to define the name of the resource
+	//PathNameKind NameKind // used to define the name of the path in the package
+	PackageName string // name of the package/provider name
+	PodName     string // name of the deployment/statefulset
+	Name        string // name of the resource
+	Namespace   string
+	TargetDir   string
+	SubDir      string
 }
 
 type NameKind string
 
 const (
-	NameKindPackage         NameKind = "package"
-	NameKindResource        NameKind = "resource"
+	NameKindFull            NameKind = "packagePodResource"
 	NameKindPackageResource NameKind = "packageResource"
-	NameKindKind            NameKind = "kind"
+	NameKindPod             NameKind = "packagePod"
 	NameKindKindResource    NameKind = "kindResource"
+	NameKindKind            NameKind = "kind"
+	NameKindResource        NameKind = "resource"
 )
-
-func (rn *Resource) GetName() string {
-	switch rn.NameKind {
-	case NameKindPackage:
-		return rn.GetPackageName("")
-	case NameKindResource:
-		return rn.GetResourceName("")
-	case NameKindPackageResource:
-		return rn.GetPackageResourceName("")
-	case NameKindKind:
-		return rn.GetKindName("")
-	}
-	return "unknown"
-}
-
-func (rn *Resource) GetFileName(extraSuffix string) string {
-	switch rn.PathNameKind {
-	case NameKindPackage:
-		return rn.GetPackageName(extraSuffix)
-	case NameKindResource:
-		return rn.GetResourceName(extraSuffix)
-	case NameKindPackageResource:
-		return rn.GetPackageResourceName(extraSuffix)
-	case NameKindKind:
-		return rn.GetKindName(extraSuffix)
-	case NameKindKindResource:
-		return rn.GetKindResourceName(extraSuffix)
-	}
-	return "unknown"
-}
-
-func (rn *Resource) GetFilePath(extraSuffix string) string {
-	return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.GetFileName(extraSuffix))+".yaml")
-}
 
 func (rn *Resource) GetNameSpace() string {
 	return rn.Namespace
 }
 
-func (rn *Resource) GetPackageName(extraSuffix string) string {
-	if extraSuffix != "" {
-		return strings.Join([]string{rn.PackageName, extraSuffix}, "-")
+func (rn *Resource) GetResourceName(suffixes ...string) string {
+	fmt.Println("GetResourceName:", rn.Kind, rn.PackageName, rn.PodName, rn.Name)
+	var sb strings.Builder
+	sb.WriteString(rn.PackageName)
+
+	if rn.PodName != "" {
+		sb.WriteString(fmt.Sprintf("-%s", rn.PodName))
 	}
-	return strings.Join([]string{rn.PackageName}, "-")
+	if rn.Name != "" {
+		sb.WriteString(fmt.Sprintf("-%s", rn.Name))
+	}
+	for _, suffix := range suffixes {
+		sb.WriteString(fmt.Sprintf("-%s", suffix))
+	}
+	return sb.String()
 }
 
-func (rn *Resource) GetResourceName(extraSuffix string) string {
-	if extraSuffix != "" {
-		return strings.Join([]string{rn.Name, extraSuffix}, "-")
+func (rn *Resource) GetFileName(suffixes ...string) string {
+	var sb strings.Builder
+	sb.WriteString(strings.ToLower(rn.Kind))
+	if rn.Name != "" {
+		sb.WriteString(fmt.Sprintf("-%s", rn.Name))
 	}
-	return rn.Name
+	for _, suffix := range suffixes {
+		sb.WriteString(fmt.Sprintf("-%s", suffix))
+	}
+	return sb.String()
 }
 
-func (rn *Resource) GetKindName(extraSuffix string) string {
-	if extraSuffix != "" {
-		return strings.Join([]string{rn.Kind, extraSuffix}, "-")
+func (rn *Resource) GetFilePath(suffixes ...string) string {
+	if rn.Kind == kptgenv1alpha1.FnConfigKind {
+		return filepath.Join(rn.TargetDir, rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(suffixes...))+".yaml")
 	}
-	return rn.Kind
+	return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.GetFileName(suffixes...))+".yaml")
 }
 
-func (rn *Resource) GetKindResourceName(extraSuffix string) string {
-	if extraSuffix != "" {
-		return strings.Join([]string{rn.Kind, rn.Name, extraSuffix}, "-")
-	}
-	return strings.Join([]string{rn.Kind, rn.Name}, "-")
-}
-
-func (rn *Resource) GetPackageResourceName(extraSuffix string) string {
-	if extraSuffix != "" {
-		return strings.Join([]string{rn.PackageName, rn.Name, extraSuffix}, "-")
-	}
-	return strings.Join([]string{rn.PackageName, rn.Name}, "-")
+func (rn *Resource) GetServiceAccountName() string {
+	return strings.Join([]string{rn.PackageName, rn.PodName}, "-")
 }
 
 func (rn *Resource) GetRoleName() string {
-	return strings.Join([]string{rn.GetName(), RoleSuffix}, "-")
+	return strings.Join([]string{rn.GetResourceName(), RoleSuffix}, "-")
 }
 
 func (rn *Resource) GetRoleBindingName() string {
-	return strings.Join([]string{rn.GetName(), RoleBindingSuffix}, "-")
+	return strings.Join([]string{rn.GetResourceName(), RoleBindingSuffix}, "-")
 }
 
 func (rn *Resource) GetServiceName() string {
-	return strings.Join([]string{rn.GetName(), ServiceSuffix}, "-")
+	return strings.Join([]string{rn.GetResourceName(), ServiceSuffix}, "-")
 }
 
 func (rn *Resource) GetCertificateName() string {
-	return strings.Join([]string{rn.GetName(), CertSuffix}, "-")
+	return strings.Join([]string{rn.GetResourceName(), CertSuffix}, "-")
 }
 
 func (rn *Resource) GetMutatingWebhookName() string {
-	return strings.Join([]string{rn.GetName(), WebhookMutatingSuffix}, "-")
+	return strings.Join([]string{rn.GetResourceName(), WebhookMutatingSuffix}, "-")
 }
 
 func (rn *Resource) GetValidatingWebhookName() string {
-	return strings.Join([]string{rn.GetName(), WebhookValidatingSuffix}, "-")
+	return strings.Join([]string{rn.GetResourceName(), WebhookValidatingSuffix}, "-")
 }
 
 func (rn *Resource) GetLabelKey() string {
-	if rn.Operation == ServiceSuffix {
-		return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, strings.Join([]string{rn.Name, rn.Operation}, "-")}, "/")
+	if rn.Kind == ServiceSuffix {
+		return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, strings.Join([]string{rn.Name, rn.Kind}, "-")}, "/")
 	}
-	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, rn.Operation}, "/")
+	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, rn.Kind}, "/")
 }
 
 func (rn *Resource) GetDnsName(x ...string) string {

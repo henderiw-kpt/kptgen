@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	sigyaml "sigs.k8s.io/yaml"
 )
@@ -21,14 +22,15 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 	}
 
 	rn := &resource.Resource{
-		Operation:    node.GetName(),
-		PackageName:  r.kptFile.GetName(),
-		Name:         node.GetName(),
-		Namespace:    r.kptFile.GetNamespace(),
-		TargetDir:    r.targetDir,
-		SubDir:       node.GetName(),
-		NameKind:     resource.NameKindPackageResource,
-		PathNameKind: resource.NameKindKind,
+		Kind:        kptgenv1alpha1.FnConfigKind,
+		PackageName: r.kptFile.GetName(),
+		PodName:     fnCfg.Spec.Selector.Name, // TODO trim it
+		Name:        node.GetName(),
+		Namespace:   r.kptFile.GetNamespace(),
+		TargetDir:   r.targetDir,
+		SubDir:      node.GetName(),
+		//NameKind:     resource.NameKindPackageResource,
+		//PathNameKind: resource.NameKindKindResource,
 	}
 
 	crdObjects := make([]extv1.CustomResourceDefinition, 0)
@@ -42,12 +44,15 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 			}
 			crdObjects = append(crdObjects, crd)
 		case fnCfg.Spec.Selector.Kind:
-			if found, err := r.validatePodContainer(fnCfg, node); err != nil {
-				return err
-			} else {
-				if found {
-					// TBD what todo if already found, we would expect 1 container that matches
-					podNode = node
+			resid := resid.FromRNode(node)
+			if resid.IsSelectedBy(fnCfg.Spec.Selector.ResId) {
+				if found, err := r.validatePodContainer(fnCfg, node); err != nil {
+					return err
+				} else {
+					if found {
+						// TBD what todo if already found, we would expect 1 container that matches
+						podNode = node
+					}
 				}
 			}
 		}
@@ -95,7 +100,7 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		x.Spec.Template.Labels[rn.GetLabelKey()] = rn.PackageName
 
 		found := false
-		vol := resource.BuildVolume(rn)
+		vol := rn.BuildVolume()
 		for _, volume := range x.Spec.Template.Spec.Volumes {
 			if volume.Name == vol.Name {
 				found = true
@@ -108,7 +113,7 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		for i, c := range x.Spec.Template.Spec.Containers {
 			if c.Name == fnCfg.Spec.Selector.ContainerName {
 				found := false
-				volm := resource.BuildVolumeMount(rn)
+				volm := rn.BuildVolumeMount()
 				for _, volumeMount := range c.VolumeMounts {
 					if volumeMount.Name == volm.Name {
 						found = true
@@ -130,12 +135,55 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		return fileutil.UpdateFileFromRObject(fp, x)
 
 	case "StatefulSet":
+		x := &appsv1.StatefulSet{}
+		if err := sigyaml.Unmarshal([]byte(podNode.MustString()), &x); err != nil {
+			return err
+		}
+		// update the labels with the service selctor key
+		x.Spec.Selector.MatchLabels[rn.GetLabelKey()] = rn.PackageName
+		x.Spec.Template.Labels[rn.GetLabelKey()] = rn.PackageName
+
+		found := false
+		vol := rn.BuildVolume()
+		for _, volume := range x.Spec.Template.Spec.Volumes {
+			if volume.Name == vol.Name {
+				found = true
+				volume = vol
+			}
+		}
+		if !found {
+			x.Spec.Template.Spec.Volumes = append(x.Spec.Template.Spec.Volumes, vol)
+		}
+		for i, c := range x.Spec.Template.Spec.Containers {
+			if c.Name == fnCfg.Spec.Selector.ContainerName {
+				found := false
+				volm := rn.BuildVolumeMount()
+				for _, volumeMount := range c.VolumeMounts {
+					if volumeMount.Name == volm.Name {
+						found = true
+						volumeMount = volm
+					}
+				}
+				if !found {
+					if len(c.VolumeMounts) == 0 {
+						x.Spec.Template.Spec.Containers[i].VolumeMounts = make([]corev1.VolumeMount, 0, 1)
+					}
+					x.Spec.Template.Spec.Containers[i].VolumeMounts = append(x.Spec.Template.Spec.Containers[i].VolumeMounts, volm)
+				}
+			}
+		}
+
+		// the path must exist since we read the resource from the filesystem
+
+		fp := fileutil.GetFullPath(rn.TargetDir, x.Annotations[kioutil.PathAnnotation])
+		return fileutil.UpdateFileFromRObject(fp, x)
 	}
 
 	return nil
 }
 
 func (r *pkgConfig) validatePodContainer(fnCfg kptgenv1alpha1.Config, node *yaml.RNode) (bool, error) {
+
 	switch fnCfg.Spec.Selector.Kind {
 	case "Deployment":
 		x := &appsv1.Deployment{}
@@ -143,7 +191,6 @@ func (r *pkgConfig) validatePodContainer(fnCfg kptgenv1alpha1.Config, node *yaml
 			return false, fmt.Errorf("deployment marshal Error: %s", err.Error())
 		}
 		for _, c := range x.Spec.Template.Spec.Containers {
-			fmt.Println(c.Name, fnCfg.Spec.Selector.ContainerName)
 			if c.Name == fnCfg.Spec.Selector.ContainerName {
 				return true, nil
 			}

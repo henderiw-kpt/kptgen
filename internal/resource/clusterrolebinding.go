@@ -24,7 +24,7 @@ func (rn *Resource) RenderClusterRoleBinding(obj interface{}) error {
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
-				Name:      rn.GetPackageResourceName(""),
+				Name:      rn.GetServiceAccountName(),
 				Namespace: rn.Namespace,
 			},
 		},

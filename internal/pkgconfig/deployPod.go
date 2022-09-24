@@ -28,14 +28,15 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 
 	for roleName, rules := range fnCfg.Spec.PermissionRequests {
 		rn := &resource.Resource{
-			Operation:    resource.PodSuffix,
-			PackageName:  r.kptFile.GetName(),
-			Name:         roleName,
-			Namespace:    r.kptFile.GetNamespace(),
-			TargetDir:    r.targetDir,
-			SubDir:       node.GetName(),
-			NameKind:     resource.NameKindPackageResource,
-			PathNameKind: resource.NameKindKindResource,
+			Kind:        kptgenv1alpha1.FnPodKind,
+			PackageName: r.kptFile.GetName(),
+			PodName:     node.GetName(),
+			Name:        roleName,
+			Namespace:   r.kptFile.GetNamespace(),
+			TargetDir:   r.targetDir,
+			SubDir:      node.GetName(),
+			//NameKind:     resource.NameKindFull,
+			//PathNameKind: resource.NameKindKindResource,
 		}
 
 		if roleName == kptgenv1alpha1.ControllerClusterRoleName {
@@ -56,14 +57,15 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 	}
 
 	rn := &resource.Resource{
-		Operation:    resource.PodSuffix,
-		PackageName:  r.kptFile.GetName(),
-		Name:         node.GetName(),
-		Namespace:    r.kptFile.GetNamespace(),
-		TargetDir:    r.targetDir,
-		SubDir:       node.GetName(),
-		NameKind:     resource.NameKindPackageResource,
-		PathNameKind: resource.NameKindKind,
+		Kind:        kptgenv1alpha1.FnPodKind,
+		PackageName: r.kptFile.GetName(),
+		PodName:     node.GetName(),
+		//Name:        node.GetName(),
+		Namespace: r.kptFile.GetNamespace(),
+		TargetDir: r.targetDir,
+		SubDir:    node.GetName(),
+		//NameKind:     resource.NameKindPod,
+		//PathNameKind: resource.NameKindKindResource,
 	}
 
 	if err := rn.RenderServiceAccount(fnCfg.Spec); err != nil {

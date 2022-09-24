@@ -37,13 +37,8 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 type Runner struct {
 	Command     *cobra.Command
 	FnConfigDir string
-	//TargetDir   string
-	Ctx context.Context
-	// dynamic input
-	//pb      *kio.PackageBuffer
-	//kptFile *yaml.RNode
-	//fc      map[string][]*yaml.RNode
-	pkgCfg pkgconfig.PkgConfig
+	Ctx         context.Context
+	pkgCfg      pkgconfig.PkgConfig
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
