@@ -33,7 +33,7 @@ func (r *pkgConfig) deployClusterRole(node *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	}
 	return nil
 }

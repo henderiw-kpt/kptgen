@@ -38,9 +38,8 @@ func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) (*yaml
 			Name:      rn.GetResourceName(),
 			Namespace: rn.GetNameSpace(),
 			Annotations: map[string]string{
-				"config.kubernetes.io/index": "0",
-				kioutil.PathAnnotation:       rn.GetRelativeFilePath(StatefullSetKind),
-				kioutil.IndexAnnotation:      "0",
+				kioutil.PathAnnotation:  rn.GetRelativeFilePath(StatefullSetKind),
+				kioutil.IndexAnnotation: "0",
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
@@ -67,36 +66,41 @@ func (rn *Resource) UpdateStatefulSet(fnCfg kptgenv1alpha1.Config, node *yaml.RN
 	if err := sigyaml.Unmarshal([]byte(node.MustString()), &x); err != nil {
 		return nil, err
 	}
-	// update the labels with the service selctor key
-	x.Spec.Selector.MatchLabels[rn.GetLabelKey()] = rn.GetPackagePodName()
-	x.Spec.Template.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
 
-	found := false
-	vol := rn.BuildVolume()
-	for _, volume := range x.Spec.Template.Spec.Volumes {
-		if volume.Name == vol.Name {
-			found = true
-			volume = vol
-		}
+	if len(fnCfg.Spec.Services) != 0 {
+		// update the labels with the service selctor key
+		x.Spec.Selector.MatchLabels[rn.GetLabelKey()] = rn.GetPackagePodName()
+		x.Spec.Template.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
 	}
-	if !found {
-		x.Spec.Template.Spec.Volumes = append(x.Spec.Template.Spec.Volumes, vol)
-	}
-	for i, c := range x.Spec.Template.Spec.Containers {
-		if c.Name == fnCfg.Spec.Selector.ContainerName {
-			found := false
-			volm := rn.BuildVolumeMount(fnCfg.Spec.Webhook)
-			for _, volumeMount := range c.VolumeMounts {
-				if volumeMount.Name == volm.Name {
-					found = true
-					volumeMount = volm
-				}
+
+	if fnCfg.Spec.Webhook || fnCfg.Spec.Volume || fnCfg.Spec.Certificate.IssuerRef != "" {
+		found := false
+		vol := rn.BuildVolume(fnCfg.Spec.Certificate.IssuerRef != "")
+		for _, volume := range x.Spec.Template.Spec.Volumes {
+			if volume.Name == vol.Name {
+				found = true
+				volume = vol
 			}
-			if !found {
-				if len(c.VolumeMounts) == 0 {
-					x.Spec.Template.Spec.Containers[i].VolumeMounts = make([]corev1.VolumeMount, 0, 1)
+		}
+		if !found {
+			x.Spec.Template.Spec.Volumes = append(x.Spec.Template.Spec.Volumes, vol)
+		}
+		for i, c := range x.Spec.Template.Spec.Containers {
+			if c.Name == fnCfg.Spec.Selector.ContainerName {
+				found := false
+				volm := rn.BuildVolumeMount(fnCfg.Spec.Certificate.IssuerRef != "")
+				for _, volumeMount := range c.VolumeMounts {
+					if volumeMount.Name == volm.Name {
+						found = true
+						volumeMount = volm
+					}
 				}
-				x.Spec.Template.Spec.Containers[i].VolumeMounts = append(x.Spec.Template.Spec.Containers[i].VolumeMounts, volm)
+				if !found {
+					if len(c.VolumeMounts) == 0 {
+						x.Spec.Template.Spec.Containers[i].VolumeMounts = make([]corev1.VolumeMount, 0, 1)
+					}
+					x.Spec.Template.Spec.Containers[i].VolumeMounts = append(x.Spec.Template.Spec.Containers[i].VolumeMounts, volm)
+				}
 			}
 		}
 	}

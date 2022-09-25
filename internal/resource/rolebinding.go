@@ -24,9 +24,8 @@ func (rn *Resource) RenderRoleBinding() (*yaml.RNode, error) {
 			Name:      rn.GetRoleBindingName(),
 			Namespace: rn.Namespace,
 			Annotations: map[string]string{
-				"config.kubernetes.io/index": "0",
-				kioutil.PathAnnotation:       rn.GetRelativeFilePath(RoleBindingKind),
-				kioutil.IndexAnnotation:      "0",
+				kioutil.PathAnnotation:  rn.GetRelativeFilePath(RoleBindingKind),
+				kioutil.IndexAnnotation: "0",
 			},
 		},
 		Subjects: []rbacv1.Subject{

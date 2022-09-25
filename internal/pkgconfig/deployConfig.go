@@ -31,13 +31,13 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		ResourceNameKind: resource.NameKindFull,
 	}
 
-	// get the crds in the package as they will be used for webhooks if they are 
+	// get the crds in the package as they will be used for webhooks if they are
 	// required in the fnConfig
-	// also get the selected yaml.RNode based on the selector, which will be used 
+	// also get the selected yaml.RNode based on the selector, which will be used
 	// later for updating volumes and labels
 	crdObjects := make([]extv1.CustomResourceDefinition, 0)
 	var selectedNode *yaml.RNode
-	for _, node := range r.resources.Get() {
+	for _, node := range r.pkgResources.Get() {
 		switch node.GetKind() {
 		case "CustomResourceDefinition":
 			crd := extv1.CustomResourceDefinition{}
@@ -76,7 +76,7 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	}
 	// render webhook
 	if fnCfg.Spec.Webhook {
@@ -84,12 +84,12 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 		node, err = rn.RenderValidatingWebhook(fnCfg.Spec, crdObjects)
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	}
 	// render certificate
 	if fnCfg.Spec.Certificate.IssuerRef != "" {
@@ -97,7 +97,7 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	}
 
 	// mutate deployment or statefulset
@@ -107,15 +107,14 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		r.resources.Add(updateNode)
+		r.pkgResources.Add(updateNode)
 
-		
 	case "StatefulSet":
 		updateNode, err := rn.UpdateStatefulSet(fnCfg, selectedNode)
 		if err != nil {
 			return err
 		}
-		r.resources.Add(updateNode)
+		r.pkgResources.Add(updateNode)
 	}
 
 	return nil

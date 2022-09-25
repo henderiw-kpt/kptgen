@@ -39,9 +39,8 @@ func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetRoleName(),
 			Annotations: map[string]string{
-				"config.kubernetes.io/index": "0",
-				kioutil.PathAnnotation:       rn.GetRelativeFilePath(ClusterRoleKind),
-				kioutil.IndexAnnotation:      "0",
+				kioutil.PathAnnotation:  rn.GetRelativeFilePath(ClusterRoleKind),
+				kioutil.IndexAnnotation: "0",
 			},
 		},
 		Rules: rules,

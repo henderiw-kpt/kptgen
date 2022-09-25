@@ -8,23 +8,31 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (rn *Resource) BuildVolume() corev1.Volume {
+func (rn *Resource) BuildVolume(certificate bool) corev1.Volume {
+	if certificate {
+		return corev1.Volume{
+			Name: rn.GetResourceName(),
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName:  rn.GetCertificateName(),
+					DefaultMode: utils.Int32Ptr(420),
+				},
+			},
+		}
+	}
 	return corev1.Volume{
 		Name: rn.GetResourceName(),
 		VolumeSource: corev1.VolumeSource{
-			Secret: &corev1.SecretVolumeSource{
-				SecretName:  rn.GetCertificateName(),
-				DefaultMode: utils.Int32Ptr(420),
-			},
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
 	}
 }
 
-func (rn *Resource) BuildVolumeMount(webhook bool) corev1.VolumeMount {
-	if webhook {
+func (rn *Resource) BuildVolumeMount(certificate bool) corev1.VolumeMount {
+	if certificate {
 		return corev1.VolumeMount{
 			Name:      rn.GetResourceName(),
-			MountPath: filepath.Join("tmp", strings.Join([]string{"k8s", WebhookSuffix, "server"}, "-"), CertPathSuffix),
+			MountPath: filepath.Join("tmp", strings.Join([]string{"k8s", rn.Name, "server"}, "-"), CertPathSuffix),
 			ReadOnly:  true,
 		}
 	}

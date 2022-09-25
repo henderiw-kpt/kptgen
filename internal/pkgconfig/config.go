@@ -6,7 +6,7 @@ import (
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
-	"github.com/henderiw-kpt/kptgen/internal/krmresource"
+	"github.com/henderiw-kpt/kptgen/internal/pkgresource"
 	"github.com/henderiw-kpt/kptgen/internal/util/config"
 	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
@@ -18,8 +18,8 @@ type PkgConfig interface {
 }
 
 type pkgConfig struct {
-	targetDir string
-	resources      krmresource.Resources
+	targetDir      string
+	pkgResources   pkgresource.Resources
 	kptFile        *yaml.RNode
 	fc             map[string][]*yaml.RNode
 	supportedKinds map[string]func(node *yaml.RNode) error
@@ -31,9 +31,9 @@ func New(args []string, fnConfig string) (PkgConfig, error) {
 	}
 
 	r := &pkgConfig{
-		targetDir: args[0],
-		resources: krmresource.New(),
-		fc:        map[string][]*yaml.RNode{},
+		targetDir:    args[0],
+		pkgResources: pkgresource.New(),
+		fc:           map[string][]*yaml.RNode{},
 	}
 	// list of supported kind and methods to implement them
 	r.supportedKinds = map[string]func(node *yaml.RNode) error{
@@ -76,6 +76,7 @@ func (r *pkgConfig) initializeFnConfig(fnConfig string) error {
 		return err
 	}
 	for _, node := range fcpb.Nodes {
+		//fmt.Println("initializeFnConfig", node.GetApiVersion(), node.GetKind())
 		if node.GetApiVersion() == kptgenv1alpha1.FnConfigAPIVersion {
 			if r.isSupportedKind(node.GetKind()) {
 				// initialize the list of fn RNodes for this kind
@@ -99,7 +100,7 @@ func (r *pkgConfig) isSupportedKind(kind string) bool {
 	return false
 }
 
-// supportedKindString concatenates the supported kinds in a string 
+// supportedKindString concatenates the supported kinds in a string
 // used for printing
 func (r *pkgConfig) supportedKindString() string {
 	var sb strings.Builder
@@ -120,10 +121,10 @@ func (r *pkgConfig) initializePackage() error {
 
 	// initialize resources
 	for _, node := range pb.Nodes {
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	}
 
-	cfg := config.New(r.resources, map[string]string{
+	cfg := config.New(r.pkgResources, map[string]string{
 		kptv1.KptFileKind: "",
 		//kptgenv1alpha1.FnClusterRoleKind: filepath.Base(r.FnConfigPath),
 	})

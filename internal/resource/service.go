@@ -39,9 +39,8 @@ func (rn *Resource) RenderService(cfg, obj interface{}) (*yaml.RNode, error) {
 		svc.Spec.Selector[rn.GetLabelKey()] = rn.GetPackagePodName()
 	}
 	svc.ObjectMeta.Annotations = map[string]string{
-		"config.kubernetes.io/index": "0",
-		kioutil.PathAnnotation:       rn.GetRelativeFilePath(ServiceKind),
-		kioutil.IndexAnnotation:      "0",
+		kioutil.PathAnnotation:  rn.GetRelativeFilePath(ServiceKind),
+		kioutil.IndexAnnotation: "0",
 	}
 
 	x := &corev1.Service{

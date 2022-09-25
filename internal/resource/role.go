@@ -24,9 +24,8 @@ func (rn *Resource) RenderRole(rules []rbacv1.PolicyRule) (*yaml.RNode, error) {
 			Name:      rn.GetRoleName(),
 			Namespace: rn.GetNameSpace(),
 			Annotations: map[string]string{
-				"config.kubernetes.io/index": "0",
-				kioutil.PathAnnotation:       rn.GetRelativeFilePath(RoleKind),
-				kioutil.IndexAnnotation:      "0",
+				kioutil.PathAnnotation:  rn.GetRelativeFilePath(RoleKind),
+				kioutil.IndexAnnotation: "0",
 			},
 		},
 		Rules: rules,

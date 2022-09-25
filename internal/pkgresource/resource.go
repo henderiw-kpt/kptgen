@@ -1,4 +1,4 @@
-package krmresource
+package pkgresource
 
 import (
 	"fmt"
@@ -14,8 +14,9 @@ type Resources interface {
 	Get() []*yaml.RNode
 	Copy() Resources
 	IsEqual(arnl []*yaml.RNode) (bool, error)
-	Print(prefix ...string)
 	Write(targetDir string) error
+	Print(prefix ...string)
+	PrintPath()
 }
 
 func New() Resources {
@@ -34,6 +35,7 @@ func (x *resources) Add(rn *yaml.RNode) {
 			rn.GetKind() == rnode.GetKind() &&
 			rn.GetName() == rnode.GetName() {
 			x.resources[i] = rn
+			return
 		}
 	}
 	x.resources = append(x.resources, rn)
@@ -82,6 +84,41 @@ func (x *resources) IsEqual(arnl []*yaml.RNode) (bool, error) {
 	return true, nil
 }
 
+func (x *resources) Write(targetDir string) error {
+	for _, rn := range x.resources {
+		fp := fileutil.GetFullPath(targetDir, rn.GetAnnotations()[kioutil.PathAnnotation])
+		//fmt.Println(rn.GetAnnotations()[kioutil.PathAnnotation])
+		//fmt.Println(fp)
+
+		clearAnnotations := []string{
+			kioutil.IndexAnnotation,
+			kioutil.PathAnnotation,
+			kioutil.LegacyPathAnnotation,
+			kioutil.LegacyIndexAnnotation,
+		}
+
+		for _, a := range clearAnnotations {
+			_, err := rn.Pipe(yaml.ClearAnnotation(a))
+			if err != nil {
+				return err
+			}
+		}
+
+		if err := fileutil.WriteFileFromRNode(fp, rn); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (x *resources) PrintPath() {
+	fmt.Println("#### PrintPath Start #####")
+	for _, rn := range x.resources {
+		fmt.Println(rn.GetAnnotations()[kioutil.PathAnnotation])
+	}
+	fmt.Println("#### PrintPath End  #####")
+}
+
 func (x *resources) Print(prefix ...string) {
 	fmt.Println()
 	fmt.Println(prefix)
@@ -95,20 +132,4 @@ func (x *resources) Print(prefix ...string) {
 			fmt.Printf("  label key: %s, value: %s\n", k, v)
 		}
 	}
-}
-
-func (x *resources) Write(targetDir string) error {
-	for _, rn := range x.resources {
-		fp := fileutil.GetFullPath(targetDir, rn.GetAnnotations()[kioutil.PathAnnotation])
-
-		// remove annotations that are used for internal purposes
-		delete(rn.GetAnnotations(), kioutil.PathAnnotation)
-		delete(rn.GetAnnotations(), kioutil.IndexAnnotation)
-		delete(rn.GetAnnotations(), "config.kubernetes.io/index")
-
-		if err := fileutil.WriteFileFromRNode(fp, rn); err != nil {
-			return err
-		}
-	}
-	return nil
 }

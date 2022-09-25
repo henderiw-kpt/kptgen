@@ -19,7 +19,7 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 	//fmt.Printf("permission requests: %#v\n", r.fc.Spec.PermissionRequests)
 	//fmt.Printf("pod template: %#v\n", r.fc.Spec.PodTemplate)
 
-	crds, err := resourceutil.GetCRDs(r.resources)
+	crds, err := resourceutil.GetCRDs(r.pkgResources)
 	if err != nil {
 		return err
 	}
@@ -44,23 +44,23 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 			if err != nil {
 				return err
 			}
-			r.resources.Add(node)
+			r.pkgResources.Add(node)
 			node, err = rn.RenderClusterRoleBinding(crds)
 			if err != nil {
 				return err
 			}
-			r.resources.Add(node)
+			r.pkgResources.Add(node)
 		} else {
 			node, err := rn.RenderRole(rules)
 			if err != nil {
 				return err
 			}
-			r.resources.Add(node)
+			r.pkgResources.Add(node)
 			node, err = rn.RenderRoleBinding()
 			if err != nil {
 				return err
 			}
-			r.resources.Add(node)
+			r.pkgResources.Add(node)
 		}
 	}
 
@@ -80,7 +80,7 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 	if err != nil {
 		return err
 	}
-	r.resources.Add(node)
+	r.pkgResources.Add(node)
 
 	switch fnCfg.Spec.Type {
 	case kptgenv1alpha1.DeploymentTypeDeployment:
@@ -88,13 +88,13 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	case kptgenv1alpha1.DeploymentTypeStatefulset:
 		node, err := rn.RenderProviderStatefulSet(fnCfg.Spec)
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	}
 
 	for _, service := range fnCfg.Spec.Services {
@@ -102,7 +102,7 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		r.resources.Add(node)
+		r.pkgResources.Add(node)
 	}
 
 	return nil

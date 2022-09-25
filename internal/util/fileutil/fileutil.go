@@ -186,7 +186,7 @@ func CreateFileFromRNode(targetDir string, node *yaml.RNode) error {
 		return nil
 	}
 	// if multiple yaml objects exists we split them accross multiple files
-	if v, ok := node.GetAnnotations()["config.kubernetes.io/index"]; ok {
+	if v, ok := node.GetAnnotations()[kioutil.IndexAnnotation]; ok {
 		if v != "0" {
 			split := strings.Split(fileName, ".")
 			fileName = strings.Join([]string{split[0] + v, split[1]}, ".")

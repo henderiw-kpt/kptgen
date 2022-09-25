@@ -23,9 +23,8 @@ func (rn *Resource) RenderNamespace() (*yaml.RNode, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetNameSpace(),
 			Annotations: map[string]string{
-				"config.kubernetes.io/index": "0",
-				kioutil.PathAnnotation:       rn.GetRelativeFilePath(NamespaceKind),
-				kioutil.IndexAnnotation:      "0",
+				kioutil.PathAnnotation:  rn.GetRelativeFilePath(NamespaceKind),
+				kioutil.IndexAnnotation: "0",
 			},
 		},
 	}

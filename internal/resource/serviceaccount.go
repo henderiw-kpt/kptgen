@@ -25,9 +25,8 @@ func (rn *Resource) RenderServiceAccount(fc *kptgenv1alpha1.PodSpec) (*yaml.RNod
 			Name:      rn.GetServiceAccountName(),
 			Namespace: rn.Namespace,
 			Annotations: map[string]string{
-				"config.kubernetes.io/index": "0",
-				kioutil.PathAnnotation:       rn.GetRelativeFilePath(ServiceAccountKind),
-				kioutil.IndexAnnotation:      "0",
+				kioutil.PathAnnotation:  rn.GetRelativeFilePath(ServiceAccountKind),
+				kioutil.IndexAnnotation: "0",
 			},
 		},
 	}

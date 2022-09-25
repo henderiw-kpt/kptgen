@@ -28,9 +28,8 @@ func (rn *Resource) RenderCertificate(cfg, obj interface{}) (*yaml.RNode, error)
 			Name:      rn.GetCertificateName(),
 			Namespace: rn.Namespace,
 			Annotations: map[string]string{
-				"config.kubernetes.io/index": "0",
-				kioutil.PathAnnotation:       rn.GetRelativeFilePath(certv1.CertificateKind),
-				kioutil.IndexAnnotation:      "0",
+				kioutil.PathAnnotation:  rn.GetRelativeFilePath(certv1.CertificateKind),
+				kioutil.IndexAnnotation: "0",
 			},
 		},
 		Spec: certv1.CertificateSpec{
