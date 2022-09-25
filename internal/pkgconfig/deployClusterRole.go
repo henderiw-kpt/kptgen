@@ -10,27 +10,30 @@ import (
 )
 
 func (r *pkgConfig) deployClusterRole(node *yaml.RNode) error {
+	// marshal the fnConfig
 	fnCfg := kptgenv1alpha1.ClusterRole{}
 	if err := sigyaml.Unmarshal([]byte(node.MustString()), &fnCfg); err != nil {
 		return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
 	}
 
+	// render the cluster roles based on the fnConfig input
 	for roleName, rules := range fnCfg.Spec.PermissionRequests {
 		//fmt.Printf("permission requests: %s %#v\n", name, rules)
 		rn := &resource.Resource{
-			Kind:        kptgenv1alpha1.FnClusterRoleKind,
-			PackageName: r.kptFile.GetName(),
-			Name:        roleName,
-			Namespace:   r.kptFile.GetNamespace(),
-			TargetDir:   r.targetDir,
-			SubDir:      resource.RBACDir,
-			//NameKind:     resource.NameKindPackageResource,
-			//PathNameKind: resource.NameKindKindResource,
+			Kind:             kptgenv1alpha1.FnClusterRoleKind,
+			PackageName:      r.kptFile.GetName(),
+			Name:             roleName,
+			Namespace:        r.kptFile.GetNamespace(),
+			TargetDir:        r.targetDir,
+			SubDir:           resource.RBACDir,
+			ResourceNameKind: resource.NameKindKindResource,
 		}
 
-		if err := rn.RenderClusterRole(rules, nil); err != nil {
+		node, err := rn.RenderClusterRole(rules, nil)
+		if err != nil {
 			return err
 		}
+		r.resources.Add(node)
 	}
 	return nil
 }

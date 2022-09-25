@@ -1,18 +1,20 @@
 package resource
 
 import (
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
+	"strings"
+
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
 	RoleKind = "Role"
 )
 
-func (rn *Resource) RenderRole(rules []rbacv1.PolicyRule) error {
-	rn.Kind = ClusterRoleKind
-
+func (rn *Resource) RenderRole(rules []rbacv1.PolicyRule) (*yaml.RNode, error) {
 	x := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       RoleKind,
@@ -21,9 +23,19 @@ func (rn *Resource) RenderRole(rules []rbacv1.PolicyRule) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rn.GetRoleName(),
 			Namespace: rn.GetNameSpace(),
+			Annotations: map[string]string{
+				"config.kubernetes.io/index": "0",
+				kioutil.PathAnnotation:       rn.GetRelativeFilePath(RoleKind),
+				kioutil.IndexAnnotation:      "0",
+			},
 		},
 		Rules: rules,
 	}
 
-	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	p.PrintObj(x, b)
+	return yaml.Parse(b.String())
+
+	//return fileutil.CreateFileFromRObject(rn.GetFilePath(RoleKind), x)
 }

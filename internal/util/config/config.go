@@ -3,14 +3,14 @@ package config
 import (
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
-	"sigs.k8s.io/kustomize/kyaml/kio"
+	"github.com/henderiw-kpt/kptgen/internal/krmresource"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 type Config struct {
-	Pb        *kio.PackageBuffer
+	Resources krmresource.Resources
 	Selectors map[string]resid.ResId
 }
 
@@ -18,7 +18,7 @@ func (c *Config) Get() map[string]*yaml.RNode {
 	//fmt.Println("Config get selectors len", len(c.Selectors))
 	//fmt.Println("Config get input selectors", c.Selectors)
 	results := make(map[string]*yaml.RNode, len(c.Selectors))
-	for _, node := range c.Pb.Nodes {
+	for _, node := range c.Resources.Get() {
 		// check local config flags
 		if v, ok := node.GetAnnotations()[filters.LocalConfigAnnotation]; ok && v == "true" {
 			for kind, selector := range c.Selectors {
@@ -33,11 +33,12 @@ func (c *Config) Get() map[string]*yaml.RNode {
 	return results
 }
 
-func New(pb *kio.PackageBuffer, selectors map[string]string) Config {
+func New(r krmresource.Resources, selectors map[string]string) Config {
 	c := Config{
-		Pb:        pb,
+		Resources: r,
 		Selectors: make(map[string]resid.ResId, len(selectors)),
 	}
+
 	for kind := range selectors {
 		if kind == kptv1.KptFileKind {
 			c.Selectors[kind] = resid.ResId{

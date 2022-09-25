@@ -212,6 +212,14 @@ func UpdateFileFromRNode(targetDir, data string, node *yaml.RNode) error {
 	return ioutil.WriteFile(fp, []byte(data), 0644)
 }
 
+func WriteFileFromRNode(fp string, node *yaml.RNode) error {
+	if err := EnsureDir(filepath.Dir(fp), true); err != nil {
+		return err
+	}
+	fmt.Printf("writing resource ... : %s %s %s %s\n", node.GetKind(), node.GetName(), fp, node.GetApiVersion())
+	return ioutil.WriteFile(fp, []byte(node.MustString()), 0644)
+}
+
 func GetPathFromRNode(node *yaml.RNode) string {
 	ann := node.GetAnnotations()
 	if path, ok := ann[kioutil.PathAnnotation]; ok {

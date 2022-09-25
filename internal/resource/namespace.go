@@ -1,18 +1,20 @@
 package resource
 
 import (
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
 	NamespaceKind = "Namespace"
 )
 
-func (rn *Resource) RenderNamespace() error {
-	rn.Kind = NamespaceKind
-
+func (rn *Resource) RenderNamespace() (*yaml.RNode, error) {
 	x := &corev1.Namespace{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       NamespaceKind,
@@ -20,8 +22,18 @@ func (rn *Resource) RenderNamespace() error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetNameSpace(),
+			Annotations: map[string]string{
+				"config.kubernetes.io/index": "0",
+				kioutil.PathAnnotation:       rn.GetRelativeFilePath(NamespaceKind),
+				kioutil.IndexAnnotation:      "0",
+			},
 		},
 	}
 
-	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	p.PrintObj(x, b)
+	return yaml.Parse(b.String())
+
+	//return fileutil.CreateFileFromRObject(rn.GetFilePath(NamespaceKind), x)
 }

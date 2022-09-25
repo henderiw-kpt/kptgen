@@ -5,11 +5,13 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	"github.com/yndd/ndd-runtime/pkg/utils"
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -18,16 +20,14 @@ const (
 )
 
 //crdObjects fn.KubeObjects
-func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) error {
-	rn.Kind = MutatingWebhookConfigurationKind
-
+func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) (*yaml.RNode, error) {
 	failurePolicy := admissionv1.Fail
 	sideEffect := admissionv1.SideEffectClassNone
 
 	webhooks := []admissionv1.MutatingWebhook{}
 	objs, ok := obj.([]extv1.CustomResourceDefinition)
 	if !ok {
-		return fmt.Errorf("wrong object in buildValidatingWebhook: %v", reflect.TypeOf(objs))
+		return nil, fmt.Errorf("wrong object in buildValidatingWebhook: %v", reflect.TypeOf(objs))
 	}
 	for _, crd := range objs {
 		for _, crdVersion := range crd.Spec.Versions {
@@ -67,26 +67,35 @@ func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) error {
 			APIVersion: admissionv1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        rn.GetMutatingWebhookName(),
-			Namespace:   rn.Namespace,
-			Annotations: rn.GetCertificateAnnotation(),
+			Name:      rn.GetMutatingWebhookName(),
+			Namespace: rn.Namespace,
+			//Annotations: rn.GetCertificateAnnotation(),
+			Annotations: map[string]string{
+				CertInjectionKey:             strings.Join([]string{rn.Namespace, rn.GetCertificateName()}, "/"),
+				"config.kubernetes.io/index": "0",
+				kioutil.PathAnnotation:       rn.GetRelativeFilePath(MutatingWebhookConfigurationKind),
+				kioutil.IndexAnnotation:      "0",
+			},
 		},
 		Webhooks: webhooks,
 	}
 
-	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	p.PrintObj(x, b)
+	return yaml.Parse(b.String())
+
+	//return fileutil.CreateFileFromRObject(rn.GetFilePath(MutatingWebhookConfigurationKind), x)
 }
 
-func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
-	rn.Kind = ValidatingWebhookConfigurationKind
-
+func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) (*yaml.RNode, error) {
 	failurePolicy := admissionv1.Fail
 	sideEffect := admissionv1.SideEffectClassNone
 
 	webhooks := []admissionv1.ValidatingWebhook{}
 	objs, ok := obj.([]extv1.CustomResourceDefinition)
 	if !ok {
-		return fmt.Errorf("wrong object in buildValidatingWebhook: %v", reflect.TypeOf(objs))
+		return nil, fmt.Errorf("wrong object in buildValidatingWebhook: %v", reflect.TypeOf(objs))
 	}
 	for _, crd := range objs {
 		for _, crdVersion := range crd.Spec.Versions {
@@ -126,12 +135,22 @@ func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) error {
 			APIVersion: admissionv1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        rn.GetValidatingWebhookName(),
-			Namespace:   rn.Namespace,
-			Annotations: rn.GetCertificateAnnotation(),
+			Name:      rn.GetValidatingWebhookName(),
+			Namespace: rn.Namespace,
+			//Annotations: rn.GetCertificateAnnotation(),
+			Annotations: map[string]string{
+				CertInjectionKey:             strings.Join([]string{rn.Namespace, rn.GetCertificateName()}, "/"),
+				"config.kubernetes.io/index": "0",
+				kioutil.PathAnnotation:       rn.GetRelativeFilePath(ValidatingWebhookConfigurationKind),
+				kioutil.IndexAnnotation:      "0",
+			},
 		},
 		Webhooks: webhooks,
 	}
 
-	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	p.PrintObj(x, b)
+	return yaml.Parse(b.String())
+	//return fileutil.CreateFileFromRObject(rn.GetFilePath(ValidatingWebhookConfigurationKind), x)
 }

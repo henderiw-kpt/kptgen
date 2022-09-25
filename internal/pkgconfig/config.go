@@ -6,10 +6,10 @@ import (
 
 	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
+	"github.com/henderiw-kpt/kptgen/internal/krmresource"
 	"github.com/henderiw-kpt/kptgen/internal/util/config"
 	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	"github.com/henderiw-kpt/kptgen/internal/util/pkgutil"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -18,9 +18,8 @@ type PkgConfig interface {
 }
 
 type pkgConfig struct {
-	//fnConfigDir string
-	targetDir      string
-	pb             *kio.PackageBuffer
+	targetDir string
+	resources      krmresource.Resources
 	kptFile        *yaml.RNode
 	fc             map[string][]*yaml.RNode
 	supportedKinds map[string]func(node *yaml.RNode) error
@@ -33,8 +32,10 @@ func New(args []string, fnConfig string) (PkgConfig, error) {
 
 	r := &pkgConfig{
 		targetDir: args[0],
+		resources: krmresource.New(),
 		fc:        map[string][]*yaml.RNode{},
 	}
+	// list of supported kind and methods to implement them
 	r.supportedKinds = map[string]func(node *yaml.RNode) error{
 		kptgenv1alpha1.DummyFnConfig:     r.deployNamespace,
 		kptgenv1alpha1.FnPodKind:         r.deployPod,
@@ -46,12 +47,12 @@ func New(args []string, fnConfig string) (PkgConfig, error) {
 		return nil, err
 	}
 
+	// initializes the fnConfigs that will be used to render the resources
 	if err := r.initializeFnConfig(fnConfig); err != nil {
 		return nil, err
 	}
 
-	// package should be initialized first as namespace
-	// takes kptfile as a dummy yaml.RNode
+	// read the yaml files and kptfile as an initialization of the package
 	if err := r.initializePackage(); err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (r *pkgConfig) initializeFnConfig(fnConfig string) error {
 		return nil
 	}
 	/* READ THE CONFIG FILES*/
-	// read only yml, yaml files and Kptfile
+	// read only yml, yaml files
 	match := []string{"*.yaml", "*.yml"}
 	fcpb, err := pkgutil.GetPackage(fnConfig, match)
 	if err != nil {
@@ -90,6 +91,7 @@ func (r *pkgConfig) initializeFnConfig(fnConfig string) error {
 	return nil
 }
 
+// validates if the fnCfongig kind is supported
 func (r *pkgConfig) isSupportedKind(kind string) bool {
 	if _, ok := r.supportedKinds[kind]; ok {
 		return true
@@ -97,6 +99,8 @@ func (r *pkgConfig) isSupportedKind(kind string) bool {
 	return false
 }
 
+// supportedKindString concatenates the supported kinds in a string 
+// used for printing
 func (r *pkgConfig) supportedKindString() string {
 	var sb strings.Builder
 	for kind := range r.supportedKinds {
@@ -105,6 +109,7 @@ func (r *pkgConfig) supportedKindString() string {
 	return sb.String()
 }
 
+// initializePackage reads all yaml files and kptFile and initialzes the resources
 func (r *pkgConfig) initializePackage() error {
 	// read only Kptfile
 	match := []string{"*.yaml", "*.yml", "Kptfile"}
@@ -112,14 +117,16 @@ func (r *pkgConfig) initializePackage() error {
 	if err != nil {
 		return err
 	}
-	r.pb = pb
 
-	cfg := config.New(r.pb, map[string]string{
+	// initialize resources
+	for _, node := range pb.Nodes {
+		r.resources.Add(node)
+	}
+
+	cfg := config.New(r.resources, map[string]string{
 		kptv1.KptFileKind: "",
 		//kptgenv1alpha1.FnClusterRoleKind: filepath.Base(r.FnConfigPath),
 	})
-
-	//fmt.Println("relative", filepath.Base(r.FnConfigPath))
 
 	selectedNodes := cfg.Get()
 	if selectedNodes[kptv1.KptFileKind] == nil {
@@ -127,17 +134,5 @@ func (r *pkgConfig) initializePackage() error {
 	}
 	r.kptFile = selectedNodes[kptv1.KptFileKind]
 
-	/*
-		if selectedNodes[kptgenv1alpha1.FnClusterRoleKind] == nil {
-			return fmt.Errorf("fnConfig must be provided -> add fnConfig file with apiVersion: %s, kind: %s, name: %s", kptgenv1alpha1.FnConfigAPIVersion, kind, r.FnConfigPath)
-		}
-		r.fnConfig = selectedNodes[kptgenv1alpha1.FnClusterRoleKind]
-		//fmt.Println("fn config", r.fnConfig.MustString())
-
-		r.fc = kptgenv1alpha1.ClusterRole{}
-		if err := sigyaml.Unmarshal([]byte(r.fnConfig.MustString()), &r.fc); err != nil {
-			return fmt.Errorf("fnConfig marshal Error: %s", err.Error())
-		}
-	*/
 	return nil
 }

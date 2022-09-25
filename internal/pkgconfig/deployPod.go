@@ -19,7 +19,7 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 	//fmt.Printf("permission requests: %#v\n", r.fc.Spec.PermissionRequests)
 	//fmt.Printf("pod template: %#v\n", r.fc.Spec.PodTemplate)
 
-	crds, err := resourceutil.GetCRDs(r.pb)
+	crds, err := resourceutil.GetCRDs(r.resources)
 	if err != nil {
 		return err
 	}
@@ -28,142 +28,82 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 
 	for roleName, rules := range fnCfg.Spec.PermissionRequests {
 		rn := &resource.Resource{
-			Kind:        kptgenv1alpha1.FnPodKind,
-			PackageName: r.kptFile.GetName(),
-			PodName:     node.GetName(),
-			Name:        roleName,
-			Namespace:   r.kptFile.GetNamespace(),
-			TargetDir:   r.targetDir,
-			SubDir:      node.GetName(),
-			//NameKind:     resource.NameKindFull,
+			Kind:             kptgenv1alpha1.FnPodKind,
+			PackageName:      r.kptFile.GetName(),
+			PodName:          node.GetName(),
+			Name:             roleName,
+			Namespace:        r.kptFile.GetNamespace(),
+			TargetDir:        r.targetDir,
+			SubDir:           node.GetName(),
+			ResourceNameKind: resource.NameKindFull,
 			//PathNameKind: resource.NameKindKindResource,
 		}
 
 		if roleName == kptgenv1alpha1.ControllerClusterRoleName {
-			if err := rn.RenderClusterRole(rules, crds); err != nil {
+			node, err := rn.RenderClusterRole(rules, crds)
+			if err != nil {
 				return err
 			}
-			if err := rn.RenderClusterRoleBinding(crds); err != nil {
+			r.resources.Add(node)
+			node, err = rn.RenderClusterRoleBinding(crds)
+			if err != nil {
 				return err
 			}
+			r.resources.Add(node)
 		} else {
-			if err := rn.RenderRole(rules); err != nil {
+			node, err := rn.RenderRole(rules)
+			if err != nil {
 				return err
 			}
-			if err := rn.RenderRoleBinding(); err != nil {
+			r.resources.Add(node)
+			node, err = rn.RenderRoleBinding()
+			if err != nil {
 				return err
 			}
+			r.resources.Add(node)
 		}
 	}
 
 	rn := &resource.Resource{
-		Kind:        kptgenv1alpha1.FnPodKind,
-		PackageName: r.kptFile.GetName(),
-		PodName:     node.GetName(),
-		//Name:        node.GetName(),
-		Namespace: r.kptFile.GetNamespace(),
-		TargetDir: r.targetDir,
-		SubDir:    node.GetName(),
-		//NameKind:     resource.NameKindPod,
+		Kind:             kptgenv1alpha1.FnPodKind,
+		PackageName:      r.kptFile.GetName(),
+		PodName:          node.GetName(),
+		Name:             node.GetName(),
+		Namespace:        r.kptFile.GetNamespace(),
+		TargetDir:        r.targetDir,
+		SubDir:           node.GetName(),
+		ResourceNameKind: resource.NameKindPackagePod,
 		//PathNameKind: resource.NameKindKindResource,
 	}
 
-	if err := rn.RenderServiceAccount(fnCfg.Spec); err != nil {
+	node, err = rn.RenderServiceAccount(fnCfg.Spec)
+	if err != nil {
 		return err
 	}
+	r.resources.Add(node)
 
 	switch fnCfg.Spec.Type {
 	case kptgenv1alpha1.DeploymentTypeDeployment:
-		if err := rn.RenderDeployment(fnCfg.Spec); err != nil {
+		node, err := rn.RenderDeployment(fnCfg.Spec)
+		if err != nil {
 			return err
 		}
+		r.resources.Add(node)
 	case kptgenv1alpha1.DeploymentTypeStatefulset:
-		if err := rn.RenderProviderStatefulSet(fnCfg.Spec); err != nil {
+		node, err := rn.RenderProviderStatefulSet(fnCfg.Spec)
+		if err != nil {
 			return err
 		}
+		r.resources.Add(node)
 	}
 
 	for _, service := range fnCfg.Spec.Services {
-		if err := rn.RenderService(service, nil); err != nil {
+		node, err := rn.RenderService(service, nil)
+		if err != nil {
 			return err
 		}
+		r.resources.Add(node)
 	}
 
-	// transform the clusterrolebinding and rolebindings
-	/*
-		matchKind := []string{"ClusterRoleBinding", "RoleBinding"}
-		for _, node := range pb.Nodes {
-			for _, m := range matchKind {
-				if m == node.GetKind() {
-					switch node.GetKind() {
-					case "ClusterRoleBinding":
-						x := rbacv1.ClusterRoleBinding{}
-						if err := sigyaml.Unmarshal([]byte(node.MustString()), &x); err != nil {
-							return err
-						}
-						replace := false
-						newSubjects := []rbacv1.Subject{}
-						for _, subject := range x.Subjects {
-							fmt.Println(subject.Kind, subject.Name, subject.Namespace)
-							if subject.Kind == "ServiceAccount" {
-								subject.Name = rn.GetName()
-								subject.Namespace = rn.Namespace
-								replace = true
-							}
-							newSubjects = append(newSubjects, subject)
-						}
-						if replace {
-							x.Name = rn.GetRoleBindingName()
-							x.Subjects = newSubjects
-							x.Annotations = map[string]string{}
-							b := new(strings.Builder)
-							p := printers.YAMLPrinter{}
-							if err := p.PrintObj(&x, b); err != nil {
-								return err
-							}
-
-							if err := fileutil.UpdateFile(r.TargetDir, b.String(), node); err != nil {
-								return err
-							}
-
-						}
-
-					case "RoleBinding":
-						x := rbacv1.RoleBinding{}
-						if err := sigyaml.Unmarshal([]byte(node.MustString()), &x); err != nil {
-							return err
-						}
-						replace := false
-						newSubjects := []rbacv1.Subject{}
-						for _, subject := range x.Subjects {
-							fmt.Println(subject.Kind, subject.Name, subject.Namespace)
-							if subject.Kind == "ServiceAccount" {
-								subject.Name = rn.GetName()
-								subject.Namespace = rn.Namespace
-								replace = true
-							}
-							newSubjects = append(newSubjects, subject)
-						}
-						if replace {
-							x.Name = rn.GetRoleBindingName()
-							x.Subjects = newSubjects
-							x.Annotations = map[string]string{}
-							b := new(strings.Builder)
-							p := printers.YAMLPrinter{}
-							if err := p.PrintObj(&x, b); err != nil {
-								return err
-							}
-
-							if err := fileutil.UpdateFile(r.TargetDir, b.String(), node); err != nil {
-								return err
-							}
-						}
-
-					}
-
-				}
-			}
-		}
-	*/
 	return nil
 }

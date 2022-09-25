@@ -3,39 +3,45 @@ package resource
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
 	ServiceKind = "Service"
 )
 
-func (rn *Resource) RenderService(cfg, obj interface{}) error {
-	rn.Kind = ServiceKind
-
+func (rn *Resource) RenderService(cfg, obj interface{}) (*yaml.RNode, error) {
 	svc, ok := cfg.(corev1.Service)
 	if !ok {
-		return fmt.Errorf("wrong object in renderService: %v", reflect.TypeOf(cfg))
+		return nil, fmt.Errorf("wrong object in renderService: %v", reflect.TypeOf(cfg))
 	}
 
 	svc.ObjectMeta.Name = rn.GetServiceName()
 	svc.ObjectMeta.Namespace = rn.GetNameSpace()
 	if len(svc.ObjectMeta.Labels) == 0 {
 		svc.ObjectMeta.Labels = map[string]string{
-			rn.GetLabelKey(): rn.PackageName,
+			rn.GetLabelKey(): rn.GetPackagePodName(),
 		}
 	} else {
-		svc.ObjectMeta.Labels[rn.GetLabelKey()] = rn.Name
+		svc.ObjectMeta.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
 	}
 	if len(svc.Spec.Selector) == 0 {
 		svc.Spec.Selector = map[string]string{
-			rn.GetLabelKey(): rn.PackageName,
+			rn.GetLabelKey(): rn.GetPackagePodName(),
 		}
 	} else {
-		svc.Spec.Selector[rn.GetLabelKey()] = rn.Name
+		svc.Spec.Selector[rn.GetLabelKey()] = rn.GetPackagePodName()
+	}
+	svc.ObjectMeta.Annotations = map[string]string{
+		"config.kubernetes.io/index": "0",
+		kioutil.PathAnnotation:       rn.GetRelativeFilePath(ServiceKind),
+		kioutil.IndexAnnotation:      "0",
 	}
 
 	x := &corev1.Service{
@@ -47,5 +53,10 @@ func (rn *Resource) RenderService(cfg, obj interface{}) error {
 		Spec:       svc.Spec,
 	}
 
-	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	p.PrintObj(x, b)
+	return yaml.Parse(b.String())
+
+	//return fileutil.CreateFileFromRObject(rn.GetFilePath(ServiceKind), x)
 }

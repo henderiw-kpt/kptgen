@@ -3,20 +3,21 @@ package resource
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	certv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	certmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
-	rn.Kind = certv1.CertificateKind
-
+func (rn *Resource) RenderCertificate(cfg, obj interface{}) (*yaml.RNode, error) {
 	info, ok := cfg.(*kptgenv1alpha1.ConfigSpec)
 	if !ok {
-		return fmt.Errorf("wrong object in rendercertificate: %v", reflect.TypeOf(cfg))
+		return nil, fmt.Errorf("wrong object in rendercertificate: %v", reflect.TypeOf(cfg))
 	}
 	x := &certv1.Certificate{
 		TypeMeta: metav1.TypeMeta{
@@ -26,6 +27,11 @@ func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rn.GetCertificateName(),
 			Namespace: rn.Namespace,
+			Annotations: map[string]string{
+				"config.kubernetes.io/index": "0",
+				kioutil.PathAnnotation:       rn.GetRelativeFilePath(certv1.CertificateKind),
+				kioutil.IndexAnnotation:      "0",
+			},
 		},
 		Spec: certv1.CertificateSpec{
 			DNSNames: []string{
@@ -40,5 +46,10 @@ func (rn *Resource) RenderCertificate(cfg, obj interface{}) error {
 		},
 	}
 
-	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	p.PrintObj(x, b)
+	return yaml.Parse(b.String())
+
+	//return fileutil.CreateFileFromRObject(rn.GetFilePath(certv1.CertificateKind), x)
 }

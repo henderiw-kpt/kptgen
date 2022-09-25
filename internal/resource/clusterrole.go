@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 
-	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -16,15 +19,13 @@ const (
 	suffixStatus    = "/status"
 )
 
-func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}) error {
-	rn.Kind = ClusterRoleKind
-
+func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}) (*yaml.RNode, error) {
 	// validate if crds are supplied
 	// for clusterroles with crds we need to add the
 	if obj != nil {
 		crds, ok := obj.([]extv1.CustomResourceDefinition)
 		if !ok {
-			return fmt.Errorf("wrong object in renderClusterRole: %v", reflect.TypeOf(crds))
+			return nil, fmt.Errorf("wrong object in renderClusterRole: %v", reflect.TypeOf(crds))
 		}
 		crdRules := getCRDPolicyRules(crds)
 		rules = append(rules, crdRules...)
@@ -37,11 +38,21 @@ func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetRoleName(),
+			Annotations: map[string]string{
+				"config.kubernetes.io/index": "0",
+				kioutil.PathAnnotation:       rn.GetRelativeFilePath(ClusterRoleKind),
+				kioutil.IndexAnnotation:      "0",
+			},
 		},
 		Rules: rules,
 	}
 
-	return fileutil.CreateFileFromRObject(rn.GetFilePath(""), x)
+	b := new(strings.Builder)
+	p := printers.YAMLPrinter{}
+	p.PrintObj(x, b)
+	return yaml.Parse(b.String())
+
+	//return fileutil.CreateFileFromRObject(rn.GetFilePath(ClusterRoleKind), x)
 }
 
 func getCRDPolicyRules(crds []extv1.CustomResourceDefinition) []rbacv1.PolicyRule {

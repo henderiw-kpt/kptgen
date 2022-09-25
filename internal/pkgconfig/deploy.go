@@ -5,7 +5,9 @@ import (
 )
 
 func (r *pkgConfig) Deploy() error {
-	// first deploy the pods
+	// print resources before rendering
+	//r.resources.Print()
+	// first deploy the fnConfig kind pods if they are required to be rendered
 	pods, ok := r.fc[kptgenv1alpha1.FnPodKind]
 	if ok {
 		for _, pod := range pods {
@@ -13,26 +15,22 @@ func (r *pkgConfig) Deploy() error {
 		}
 	}
 
-	// reinitialize the package to ensure the pod resources
-	// can be used to resolve some info like volums and services.
-	if err := r.initializePackage(); err != nil {
-		return err
-	}
-
-	// render the next resources
+	// render the next kinds
 	for kind, nodes := range r.fc {
 		for _, node := range nodes {
 			switch kind {
 			case kptgenv1alpha1.FnPodKind:
 				// do nothing as this was already handled
 			default:
-				// deploy the specific function
+				// deploy the specific kind function/method
 				if err := r.supportedKinds[kind](node); err != nil {
 					return err
 				}
 			}
 		}
-
 	}
-	return nil
+
+	// print resources after rendering
+	//r.resources.Print()
+	return r.resources.Write(r.targetDir)
 }

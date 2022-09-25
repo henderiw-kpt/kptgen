@@ -5,19 +5,21 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func (r *pkgConfig) deployNamespace(node *yaml.RNode) error {
+func (r *pkgConfig) deployNamespace(n *yaml.RNode) error {
+	// render the naemspace based on the fnConfig input
 	rn := &resource.Resource{
-		Kind:        resource.NamespaceSuffix,
-		PackageName: r.kptFile.GetName(),
-		Namespace:   r.kptFile.GetNamespace(),
-		TargetDir:   r.targetDir,
-		SubDir:      resource.NamespaceDir,
-		//NameKind:     resource.NameKindResource,
-		//PathNameKind: resource.NameKindKind,
+		Kind:             resource.NamespaceSuffix,
+		PackageName:      r.kptFile.GetName(),
+		Namespace:        r.kptFile.GetNamespace(),
+		TargetDir:        r.targetDir,
+		SubDir:           resource.NamespaceDir,
+		ResourceNameKind: resource.NameKindKind,
 	}
 
-	if err := rn.RenderNamespace(); err != nil {
+	node, err := rn.RenderNamespace()
+	if err != nil {
 		return err
 	}
+	r.resources.Add(node)
 	return nil
 }

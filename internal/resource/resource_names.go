@@ -31,8 +31,8 @@ const (
 
 type Resource struct {
 	//Prefix    string
-	Kind string
-	//NameKind     NameKind // used to define the name of the resource
+	Kind             string
+	ResourceNameKind ResourceNameKind // used to define the name of the
 	//PathNameKind NameKind // used to define the name of the path in the package
 	PackageName string // name of the package/provider name
 	PodName     string // name of the deployment/statefulset
@@ -42,29 +42,41 @@ type Resource struct {
 	SubDir      string
 }
 
-type NameKind string
+type ResourceNameKind string
 
 const (
-	NameKindFull            NameKind = "packagePodResource"
-	NameKindPackageResource NameKind = "packageResource"
-	NameKindPod             NameKind = "packagePod"
-	NameKindKindResource    NameKind = "kindResource"
-	NameKindKind            NameKind = "kind"
-	NameKindResource        NameKind = "resource"
+	NameKindFull            ResourceNameKind = "packagePodResource"
+	NameKindPackageResource ResourceNameKind = "packageResource"
+	NameKindPackagePod      ResourceNameKind = "packagePod"
+	NameKindResource        ResourceNameKind = "resource"
+	NameKindKindResource    ResourceNameKind = "kindResource"
+	NameKindKind            ResourceNameKind = "kind"
 )
 
 func (rn *Resource) GetNameSpace() string {
 	return rn.Namespace
 }
 
-func (rn *Resource) GetResourceName(suffixes ...string) string {
-	fmt.Println("GetResourceName:", rn.Kind, rn.PackageName, rn.PodName, rn.Name)
-	var sb strings.Builder
-	sb.WriteString(rn.PackageName)
+func (rn *Resource) GetResourceName() string {
 
-	if rn.PodName != "" {
-		sb.WriteString(fmt.Sprintf("-%s", rn.PodName))
+	switch rn.ResourceNameKind {
+	case NameKindFull:
+		return strings.Join([]string{rn.PackageName, rn.PodName, rn.Name}, "-")
+	case NameKindPackageResource:
+		return strings.Join([]string{rn.PackageName, rn.Name}, "-")
+	case NameKindPackagePod:
+		return strings.Join([]string{rn.PackageName, rn.PodName}, "-")
+	case NameKindResource:
+		return rn.Name
+	case NameKindKind:
+		return strings.ToLower(rn.Kind)
 	}
+	return "unknown"
+}
+
+func (rn *Resource) GetFileName(kind string, suffixes ...string) string {
+	var sb strings.Builder
+	sb.WriteString(strings.ToLower(kind))
 	if rn.Name != "" {
 		sb.WriteString(fmt.Sprintf("-%s", rn.Name))
 	}
@@ -74,26 +86,27 @@ func (rn *Resource) GetResourceName(suffixes ...string) string {
 	return sb.String()
 }
 
-func (rn *Resource) GetFileName(suffixes ...string) string {
-	var sb strings.Builder
-	sb.WriteString(strings.ToLower(rn.Kind))
-	if rn.Name != "" {
-		sb.WriteString(fmt.Sprintf("-%s", rn.Name))
-	}
-	for _, suffix := range suffixes {
-		sb.WriteString(fmt.Sprintf("-%s", suffix))
-	}
-	return sb.String()
-}
-
-func (rn *Resource) GetFilePath(suffixes ...string) string {
+func (rn *Resource) GetRelativeFilePath(kind string, suffixes ...string) string {
+	//fmt.Println("GetFilePath", rn.Kind, kptgenv1alpha1.FnConfigKind, rn.PackageName, rn.PodName, rn.Name)
 	if rn.Kind == kptgenv1alpha1.FnConfigKind {
-		return filepath.Join(rn.TargetDir, rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(suffixes...))+".yaml")
+		return filepath.Join(filepath.Base(rn.TargetDir), rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
 	}
-	return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.GetFileName(suffixes...))+".yaml")
+	return filepath.Join(filepath.Base(rn.TargetDir), rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
+}
+
+func (rn *Resource) GetFilePath(kind string, suffixes ...string) string {
+	//fmt.Println("GetFilePath", rn.Kind, kptgenv1alpha1.FnConfigKind, rn.PackageName, rn.PodName, rn.Name)
+	if rn.Kind == kptgenv1alpha1.FnConfigKind {
+		return filepath.Join(rn.TargetDir, rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
+	}
+	return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
 }
 
 func (rn *Resource) GetServiceAccountName() string {
+	return strings.Join([]string{rn.PackageName, rn.PodName}, "-")
+}
+
+func (rn *Resource) GetPackagePodName() string {
 	return strings.Join([]string{rn.PackageName, rn.PodName}, "-")
 }
 
@@ -122,10 +135,12 @@ func (rn *Resource) GetValidatingWebhookName() string {
 }
 
 func (rn *Resource) GetLabelKey() string {
-	if rn.Kind == ServiceSuffix {
-		return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, strings.Join([]string{rn.Name, rn.Kind}, "-")}, "/")
-	}
-	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, rn.Kind}, "/")
+	/*
+		if rn.Kind == ServiceSuffix {
+			return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, strings.Join([]string{rn.Name, rn.Kind}, "-")}, "/")
+		}
+	*/
+	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, strings.ToLower(rn.Name)}, "/")
 }
 
 func (rn *Resource) GetDnsName(x ...string) string {

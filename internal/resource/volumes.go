@@ -20,10 +20,17 @@ func (rn *Resource) BuildVolume() corev1.Volume {
 	}
 }
 
-func (rn *Resource) BuildVolumeMount() corev1.VolumeMount {
+func (rn *Resource) BuildVolumeMount(webhook bool) corev1.VolumeMount {
+	if webhook {
+		return corev1.VolumeMount{
+			Name:      rn.GetResourceName(),
+			MountPath: filepath.Join("tmp", strings.Join([]string{"k8s", WebhookSuffix, "server"}, "-"), CertPathSuffix),
+			ReadOnly:  true,
+		}
+	}
+
 	return corev1.VolumeMount{
 		Name:      rn.GetResourceName(),
-		MountPath: filepath.Join("tmp", strings.Join([]string{"k8s", WebhookSuffix, "server"}, "-"), CertPathSuffix),
-		ReadOnly:  true,
+		MountPath: filepath.Join(rn.Name),
 	}
 }
