@@ -73,6 +73,7 @@ func (rn *Resource) UpdateStatefulSet(fnCfgName string, fnCfg kptgenv1alpha1.Con
 		x.Spec.Template.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
 	}
 
+	/*
 	if fnCfgName == "grpc" {
 		for i, c := range x.Spec.Template.Spec.Containers {
 			if c.Name == "controller" {
@@ -97,6 +98,7 @@ func (rn *Resource) UpdateStatefulSet(fnCfgName string, fnCfg kptgenv1alpha1.Con
 			}
 		}
 	}
+	*/
 
 	if fnCfg.Spec.Webhook || fnCfg.Spec.Volume || fnCfg.Spec.Certificate.IssuerRef != "" {
 		found := false
