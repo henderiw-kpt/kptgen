@@ -73,30 +73,30 @@ func (rn *Resource) UpdateDeployment(fnCfgName string, fnCfg kptgenv1alpha1.Conf
 	}
 
 	/*
-	if fnCfgName == "grpc" {
-		for i, c := range x.Spec.Template.Spec.Containers {
-			if c.Name == "controller" {
-				found := false
-				newEnv := []corev1.EnvVar{}
-				for _, env := range c.Env {
-					if env.Name == "GRPC_CERT_SECRET_NAME" {
-						found = true
-						env.Value = rn.GetCertificateName()
-						newEnv = append(newEnv, env)
-					} else {
-						newEnv = append(newEnv, env)
+		if fnCfgName == "grpc" {
+			for i, c := range x.Spec.Template.Spec.Containers {
+				if c.Name == "controller" {
+					found := false
+					newEnv := []corev1.EnvVar{}
+					for _, env := range c.Env {
+						if env.Name == "GRPC_CERT_SECRET_NAME" {
+							found = true
+							env.Value = rn.GetCertificateName()
+							newEnv = append(newEnv, env)
+						} else {
+							newEnv = append(newEnv, env)
+						}
 					}
+					if !found {
+						newEnv = append(newEnv, corev1.EnvVar{
+							Name:  "GRPC_CERT_SECRET_NAME",
+							Value: rn.GetCertificateName(),
+						})
+					}
+					x.Spec.Template.Spec.Containers[i].Env = newEnv
 				}
-				if !found {
-					newEnv = append(newEnv, corev1.EnvVar{
-						Name:  "GRPC_CERT_SECRET_NAME",
-						Value: rn.GetCertificateName(),
-					})
-				}
-				x.Spec.Template.Spec.Containers[i].Env = newEnv
 			}
 		}
-	}
 	*/
 
 	if fnCfg.Spec.Webhook || fnCfg.Spec.Volume || fnCfg.Spec.Certificate.IssuerRef != "" {
