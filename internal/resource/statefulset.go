@@ -74,21 +74,26 @@ func (rn *Resource) UpdateStatefulSet(fnCfgName string, fnCfg kptgenv1alpha1.Con
 	}
 
 	if fnCfgName == "grpc" {
-		for _, c := range x.Spec.Template.Spec.Containers {
+		for i, c := range x.Spec.Template.Spec.Containers {
 			if c.Name == "controller" {
 				found := false
+				newEnv := []corev1.EnvVar{}
 				for _, env := range c.Env {
 					if env.Name == "GRPC_CERT_SECRET_NAME" {
 						found = true
 						env.Value = rn.GetCertificateName()
+						newEnv = append(newEnv, env)
+					} else {
+						newEnv = append(newEnv, env)
 					}
 				}
 				if !found {
-					c.Env = append(c.Env, corev1.EnvVar{
+					newEnv = append(newEnv, corev1.EnvVar{
 						Name:  "GRPC_CERT_SECRET_NAME",
 						Value: rn.GetCertificateName(),
 					})
 				}
+				x.Spec.Template.Spec.Containers[i].Env = newEnv
 			}
 		}
 	}
