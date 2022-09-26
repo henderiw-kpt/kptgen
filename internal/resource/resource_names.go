@@ -25,8 +25,8 @@ const (
 	CertSuffix              = "serving-cert"
 	CertPathSuffix          = "serving-certs"
 	CertInjectionKey        = "cert-manager.io/inject-ca-from"
-	WebhookMutatingSuffix   = "mutating-configuration"
-	WebhookValidatingSuffix = "validating-configuration"
+	//WebhookMutatingSuffix   = "mutating-configuration"
+	//WebhookValidatingSuffix = "validating-configuration"
 )
 
 type Resource struct {
@@ -127,11 +127,13 @@ func (rn *Resource) GetCertificateName() string {
 }
 
 func (rn *Resource) GetMutatingWebhookName() string {
-	return strings.Join([]string{rn.GetResourceName(), WebhookMutatingSuffix}, "-")
+	return rn.GetResourceName()
+	//return strings.Join([]string{rn.GetResourceName(), WebhookMutatingSuffix}, "-")
 }
 
 func (rn *Resource) GetValidatingWebhookName() string {
-	return strings.Join([]string{rn.GetResourceName(), WebhookValidatingSuffix}, "-")
+	return rn.GetResourceName()
+	//return strings.Join([]string{rn.GetResourceName(), WebhookValidatingSuffix}, "-")
 }
 
 func (rn *Resource) GetLabelKey() string {

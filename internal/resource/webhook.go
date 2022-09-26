@@ -67,8 +67,8 @@ func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) (*yaml.RNode, er
 			APIVersion: admissionv1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetMutatingWebhookName(),
-			Namespace: rn.Namespace,
+			Name: rn.GetMutatingWebhookName(),
+			//Namespace is not needed as this is a clusterresource
 			//Annotations: rn.GetCertificateAnnotation(),
 			Annotations: map[string]string{
 				CertInjectionKey:        strings.Join([]string{rn.Namespace, rn.GetCertificateName()}, "/"),
@@ -134,8 +134,8 @@ func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) (*yaml.RNode, 
 			APIVersion: admissionv1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rn.GetValidatingWebhookName(),
-			Namespace: rn.Namespace,
+			Name: rn.GetValidatingWebhookName(),
+			//Namespace is not needed as this is a clusterresource
 			//Annotations: rn.GetCertificateAnnotation(),
 			Annotations: map[string]string{
 				CertInjectionKey:        strings.Join([]string{rn.Namespace, rn.GetCertificateName()}, "/"),
