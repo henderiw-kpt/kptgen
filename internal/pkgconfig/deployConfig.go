@@ -103,14 +103,14 @@ func (r *pkgConfig) deployConfig(node *yaml.RNode) error {
 	// mutate deployment or statefulset
 	switch fnCfg.Spec.Selector.Kind {
 	case "Deployment":
-		updateNode, err := rn.UpdateDeployment(fnCfg, selectedNode)
+		updateNode, err := rn.UpdateDeployment(node.GetName(), fnCfg, selectedNode)
 		if err != nil {
 			return err
 		}
 		r.pkgResources.Add(updateNode)
 
 	case "StatefulSet":
-		updateNode, err := rn.UpdateStatefulSet(fnCfg, selectedNode)
+		updateNode, err := rn.UpdateStatefulSet(node.GetName(), fnCfg, selectedNode)
 		if err != nil {
 			return err
 		}

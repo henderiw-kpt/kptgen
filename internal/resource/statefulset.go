@@ -61,7 +61,7 @@ func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) (*yaml
 	//return fileutil.CreateFileFromRObject(rn.GetFilePath(StatefullSetKind), x)
 }
 
-func (rn *Resource) UpdateStatefulSet(fnCfg kptgenv1alpha1.Config, node *yaml.RNode) (*yaml.RNode, error) {
+func (rn *Resource) UpdateStatefulSet(fnCfgName string, fnCfg kptgenv1alpha1.Config, node *yaml.RNode) (*yaml.RNode, error) {
 	x := &appsv1.StatefulSet{}
 	if err := sigyaml.Unmarshal([]byte(node.MustString()), &x); err != nil {
 		return nil, err
@@ -71,6 +71,26 @@ func (rn *Resource) UpdateStatefulSet(fnCfg kptgenv1alpha1.Config, node *yaml.RN
 		// update the labels with the service selctor key
 		x.Spec.Selector.MatchLabels[rn.GetLabelKey()] = rn.GetPackagePodName()
 		x.Spec.Template.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
+	}
+
+	if fnCfgName == "grpc" {
+		for _, c := range x.Spec.Template.Spec.Containers {
+			if c.Name == "controller" {
+				found := false
+				for _, env := range c.Env {
+					if env.Name == "GRPC_CERT_SECRET_NAME" {
+						found = true
+						env.Value = rn.GetCertificateName()
+					}
+				}
+				if !found {
+					c.Env = append(c.Env, corev1.EnvVar{
+						Name:  "GRPC_CERT_SECRET_NAME",
+						Value: rn.GetCertificateName(),
+					})
+				}
+			}
+		}
 	}
 
 	if fnCfg.Spec.Webhook || fnCfg.Spec.Volume || fnCfg.Spec.Certificate.IssuerRef != "" {
