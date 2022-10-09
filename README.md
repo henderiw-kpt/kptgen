@@ -52,7 +52,7 @@ TODO
   - only deployment/stateful sets right now
   - permission requests: 
     - controller keyword
-      - used to create clusterrole, crds are augmented here
+      - used to augment crds to
     - other keywords are used to create roles
   - renders also service acccounts, service (optional) with deployment/statefulset
 - Config kind (child resource)
