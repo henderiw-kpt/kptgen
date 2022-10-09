@@ -20,6 +20,13 @@ const (
 	DeploymentTypeDeployment  DeploymentType = "deployment"
 )
 
+type PolicyScope string
+
+const (
+	PolicyScopeCluster   PolicyScope = "cluster"
+	PolicyScopeNamespace PolicyScope = "namespace"
+)
+
 type Pod struct {
 	Spec *PodSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
 }
@@ -44,14 +51,21 @@ type PodSpec struct {
 	// ClusterRoles requested bindings
 	ClusterRoles []string `json:"clusterRoles,omitempty" yaml:"clusterRoles,omitempty"`
 
-	// PermissionRequests for RBAC rules required for this controller
-	// to function. The RBAC manager is responsible for assessing the requested
-	// permissions.
+	// PermissionRequests for RBAC rules required for this controller to function.
 	// +optional
-	PermissionRequests map[string][]rbacv1.PolicyRule `json:"permissionRequests,omitempty"`
+	PermissionRequests map[string]*PolicyRules `json:"permissionRequests,omitempty"`
 
 	// pods define the pod specification used by the controller for LCM/resource allocation
 	PodTemplate corev1.PodTemplateSpec `json:"template,omitempty"`
 	// Services identifies the services the pod exposes
 	Services []corev1.Service `json:"services,omitempty"`
+}
+
+type PolicyRules struct {
+	// Scope defines the scope of the policy rules
+	// +kubebuilder:validation:Enum=`namespace`;`cluster`
+	// +kubebuilder:default=namespace
+	Scope PolicyScope `json:"scope,omitempty"`
+	// rules is the set of rules the permissions requests should fullfil
+	Permissions []rbacv1.PolicyRule `json:"permissions"`
 }

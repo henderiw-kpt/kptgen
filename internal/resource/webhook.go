@@ -19,7 +19,7 @@ const (
 	ValidatingWebhookConfigurationKind = "ValidatingWebhookConfiguration"
 )
 
-//crdObjects fn.KubeObjects
+// crdObjects fn.KubeObjects
 func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) (*yaml.RNode, error) {
 	failurePolicy := admissionv1.Fail
 	sideEffect := admissionv1.SideEffectClassNone

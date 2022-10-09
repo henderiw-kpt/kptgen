@@ -39,8 +39,8 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 			//PathNameKind: resource.NameKindKindResource,
 		}
 
-		if roleName == kptgenv1alpha1.ControllerClusterRoleName {
-			node, err := rn.RenderClusterRole(rules, crds)
+		if rules.Scope == kptgenv1alpha1.PolicyScopeCluster {
+			node, err := rn.RenderClusterRole(rules.Permissions, crds)
 			if err != nil {
 				return err
 			}
@@ -51,7 +51,7 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 			}
 			r.pkgResources.Add(node)
 		} else {
-			node, err := rn.RenderRole(rules)
+			node, err := rn.RenderRole(rules.Permissions)
 			if err != nil {
 				return err
 			}
@@ -62,6 +62,7 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 			}
 			r.pkgResources.Add(node)
 		}
+
 	}
 
 	rn := &resource.Resource{
