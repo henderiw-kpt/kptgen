@@ -22,6 +22,7 @@ func (rn *Resource) RenderNamespace() (*yaml.RNode, error) {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetNameSpace(),
+			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(NamespaceKind),
 				kioutil.IndexAnnotation: "0",

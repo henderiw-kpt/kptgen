@@ -24,6 +24,7 @@ func (rn *Resource) RenderServiceAccount(fc *kptgenv1alpha1.PodSpec) (*yaml.RNod
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rn.GetServiceAccountName(),
 			Namespace: rn.Namespace,
+			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(ServiceAccountKind),
 				kioutil.IndexAnnotation: "0",

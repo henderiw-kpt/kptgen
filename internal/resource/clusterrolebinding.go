@@ -22,6 +22,7 @@ func (rn *Resource) RenderClusterRoleBinding(obj interface{}) (*yaml.RNode, erro
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetRoleBindingName(),
+			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(ClusterRoleBindingKind),
 				kioutil.IndexAnnotation: "0",

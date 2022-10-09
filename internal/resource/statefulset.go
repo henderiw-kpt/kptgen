@@ -29,6 +29,10 @@ func (rn *Resource) RenderProviderStatefulSet(fc *kptgenv1alpha1.PodSpec) (*yaml
 		fc.PodTemplate.ObjectMeta.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
 	}
 
+	for k, v := range rn.GetK8sLabels() {
+		fc.PodTemplate.ObjectMeta.Labels[k] = v
+	}
+
 	x := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       StatefullSetKind,

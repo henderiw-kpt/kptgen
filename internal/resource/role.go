@@ -23,6 +23,7 @@ func (rn *Resource) RenderRole(rules []rbacv1.PolicyRule) (*yaml.RNode, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rn.GetRoleName(),
 			Namespace: rn.GetNameSpace(),
+			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(RoleKind),
 				kioutil.IndexAnnotation: "0",

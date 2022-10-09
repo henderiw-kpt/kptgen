@@ -38,6 +38,7 @@ func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetRoleName(),
+			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(ClusterRoleKind),
 				kioutil.IndexAnnotation: "0",
