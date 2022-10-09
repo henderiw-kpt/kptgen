@@ -6,13 +6,15 @@ import (
 
 func (r *pkgConfig) Deploy() error {
 	// print resources before rendering
-	//r.pkgResources.Print()
-	//r.pkgResources.PrintPath()
+	r.pkgResources.Print()
+	r.pkgResources.PrintPath()
 	// first deploy the fnConfig kind pods if they are required to be rendered
 	pods, ok := r.fc[kptgenv1alpha1.FnPodKind]
 	if ok {
 		for _, pod := range pods {
-			r.deployPod(pod)
+			if err := r.deployPod(pod); err != nil {
+				return err
+			}
 		}
 	}
 

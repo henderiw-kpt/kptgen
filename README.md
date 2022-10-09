@@ -36,5 +36,42 @@ TODO
 ```
 * kptgen apply container (kube-rbac-proxy)
 * kptgen apply metrics
-* kptgen apply service
 ```
+
+## design choices
+
+- Kind: Config is used for various resources -> webhooks, services, volumes, etc
+- Namespace (root resource)
+  - always created in namespace directory
+  - no fnconfig
+- ClusterRole kind (root resource)
+  - always created in rbac directory
+  - fnConfig: ClusterRole
+- Pod kind (root resource)
+  - created in directory based on name of the fnconfig
+  - only deployment/stateful sets right now
+  - permission requests: 
+    - controller keyword
+      - used to create clusterrole, crds are augmented here
+    - other keywords are used to create roles
+  - renders also service acccounts, service (optional) with deployment/statefulset
+- Config kind (child resource)
+  - relate always to a deployemt/statefulset (if the selector fails it fails)
+  - gets crds
+    - used for webhook
+  - renders service
+  - renders webhook -> aligned with kubebuilder
+    - certificate use a specific directory with volume
+  - certificate
+    - follows the kubebuilder -> directory with volume
+  - volume
+    - if tied to certificate see above
+    - if not tied to a certificate a directory is mapped
+- Transaction based approach for updates
+- What to do when manual changes are done
+  - human change:
+    - change to a rendered resource will be undone when we render again
+    - if the naming changes the resources could stall resources
+    - new yaml files can be added w/o issues but the human is in charge
+    - Discussion: we could start from scratch every time we render, but user changes will not be possible in the blueprint
+ 
