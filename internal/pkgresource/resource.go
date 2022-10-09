@@ -3,6 +3,7 @@ package pkgresource
 import (
 	"fmt"
 
+	kptv1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/henderiw-kpt/kptgen/internal/util/fileutil"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -34,9 +35,24 @@ func (x *resources) Add(rn *yaml.RNode) {
 		if rn.GetApiVersion() == rnode.GetApiVersion() &&
 			rn.GetKind() == rnode.GetKind() &&
 			rn.GetName() == rnode.GetName() {
+
 			x.resources[i] = rn
 			return
 		}
+		// kptfiles dont have a name
+		if rn.GetApiVersion() == rnode.GetApiVersion() &&
+			rn.GetKind() == kptv1.KptFileName {
+
+			fmt.Printf("add compare kptfile path: %s\n", rn.GetAnnotations()[kioutil.PathAnnotation])
+
+			if len([]byte(rn.GetAnnotations()[kioutil.PathAnnotation])) < len([]byte(rnode.GetAnnotations()[kioutil.PathAnnotation])) {
+				x.resources[i] = rn
+			}
+			return
+		}
+	}
+	if rn.GetKind() == kptv1.KptFileName {
+		fmt.Printf("add append kptfile path: %s\n", rn.GetAnnotations()[kioutil.PathAnnotation])
 	}
 	x.resources = append(x.resources, rn)
 }
