@@ -145,6 +145,17 @@ func (rn *Resource) GetLabelKey() string {
 	return strings.Join([]string{kptgenv1alpha1.FnConfigGroup, strings.ToLower(rn.Name)}, "/")
 }
 
+func (rn *Resource) GetK8sLabels() map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":       rn.PackageName,
+		"app.kubernetes.io/instance":   "tbd",
+		"app.kubernetes.io/version":    "tbd",
+		"app.kubernetes.io/component":  "tbd",
+		"app.kubernetes.io/part-of":    rn.PackageName,
+		"app.kubernetes.io/managed-by": "kpt",
+	}
+}
+
 func (rn *Resource) GetDnsName(x ...string) string {
 	s := []string{rn.GetServiceName(), rn.Namespace, ServiceSuffix}
 	if len(x) > 0 {

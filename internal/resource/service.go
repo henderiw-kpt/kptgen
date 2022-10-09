@@ -31,6 +31,10 @@ func (rn *Resource) RenderService(cfg, obj interface{}) (*yaml.RNode, error) {
 	} else {
 		svc.ObjectMeta.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
 	}
+
+	for k, v := range rn.GetK8sLabels() {
+		svc.ObjectMeta.Labels[k] = v
+	}
 	if len(svc.Spec.Selector) == 0 {
 		svc.Spec.Selector = map[string]string{
 			rn.GetLabelKey(): rn.GetPackagePodName(),

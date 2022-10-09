@@ -29,6 +29,10 @@ func (rn *Resource) RenderDeployment(fc *kptgenv1alpha1.PodSpec) (*yaml.RNode, e
 		fc.PodTemplate.ObjectMeta.Labels[rn.GetLabelKey()] = rn.GetPackagePodName()
 	}
 
+	for k, v := range rn.GetK8sLabels() {
+		fc.PodTemplate.ObjectMeta.Labels[k] = v
+	}
+
 	x := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       DeploymentKind,

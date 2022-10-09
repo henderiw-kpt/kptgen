@@ -69,7 +69,7 @@ func (rn *Resource) RenderMutatingWebhook(cfg, obj interface{}) (*yaml.RNode, er
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetMutatingWebhookName(),
 			//Namespace is not needed as this is a clusterresource
-			//Annotations: rn.GetCertificateAnnotation(),
+			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				CertInjectionKey:        strings.Join([]string{rn.Namespace, rn.GetCertificateName()}, "/"),
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(MutatingWebhookConfigurationKind),
@@ -136,7 +136,7 @@ func (rn *Resource) RenderValidatingWebhook(cfg, obj interface{}) (*yaml.RNode, 
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rn.GetValidatingWebhookName(),
 			//Namespace is not needed as this is a clusterresource
-			//Annotations: rn.GetCertificateAnnotation(),
+			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				CertInjectionKey:        strings.Join([]string{rn.Namespace, rn.GetCertificateName()}, "/"),
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(ValidatingWebhookConfigurationKind),
