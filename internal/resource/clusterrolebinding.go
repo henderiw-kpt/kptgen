@@ -14,7 +14,7 @@ const (
 	ClusterRoleBindingKind = "ClusterRoleBinding"
 )
 
-func (rn *Resource) RenderClusterRoleBinding(obj interface{}) (*yaml.RNode, error) {
+func (rn *Resource) RenderClusterRoleBinding() (*yaml.RNode, error) {
 	x := &rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       ClusterRoleBindingKind,

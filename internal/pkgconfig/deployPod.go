@@ -40,18 +40,18 @@ func (r *pkgConfig) deployPod(node *yaml.RNode) error {
 		}
 
 		if rules.Scope == kptgenv1alpha1.PolicyScopeCluster {
-			node, err := rn.RenderClusterRole(rules.Permissions, crds)
+			node, err := rn.RenderClusterRole(rules.Permissions, crds, roleName)
 			if err != nil {
 				return err
 			}
 			r.pkgResources.Add(node)
-			node, err = rn.RenderClusterRoleBinding(crds)
+			node, err = rn.RenderClusterRoleBinding()
 			if err != nil {
 				return err
 			}
 			r.pkgResources.Add(node)
 		} else {
-			node, err := rn.RenderRole(rules.Permissions)
+			node, err := rn.RenderRole(rules.Permissions, crds, roleName)
 			if err != nil {
 				return err
 			}

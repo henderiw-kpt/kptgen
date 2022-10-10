@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	kptgenv1alpha1 "github.com/henderiw-kpt/kptgen/api/v1alpha1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,10 +20,10 @@ const (
 	suffixStatus    = "/status"
 )
 
-func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}) (*yaml.RNode, error) {
+func (rn *Resource) RenderClusterRole(rules []rbacv1.PolicyRule, obj interface{}, roleName string) (*yaml.RNode, error) {
 	// validate if crds are supplied
 	// for clusterroles with crds we need to add the
-	if obj != nil {
+	if obj != nil && roleName == kptgenv1alpha1.ControllerClusterRoleName {
 		crds, ok := obj.([]extv1.CustomResourceDefinition)
 		if !ok {
 			return nil, fmt.Errorf("wrong object in renderClusterRole: %v", reflect.TypeOf(crds))
