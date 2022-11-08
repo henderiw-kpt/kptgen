@@ -89,19 +89,20 @@ func (rn *Resource) GetFileName(kind string, suffixes ...string) string {
 func (rn *Resource) GetRelativeFilePath(kind string, suffixes ...string) string {
 	//fmt.Println("GetFilePath", rn.Kind, kptgenv1alpha1.FnConfigKind, rn.PackageName, rn.PodName, rn.Name)
 	if rn.Kind == kptgenv1alpha1.FnConfigKind {
-		return filepath.Join(filepath.Base(rn.TargetDir), rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
+		return filepath.Join(filepath.Base(rn.TargetDir), "app", rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
 	}
-	return filepath.Join(filepath.Base(rn.TargetDir), rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
+	return filepath.Join(filepath.Base(rn.TargetDir), "app", rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
 }
 
-func (rn *Resource) GetFilePath(kind string, suffixes ...string) string {
-	//fmt.Println("GetFilePath", rn.Kind, kptgenv1alpha1.FnConfigKind, rn.PackageName, rn.PodName, rn.Name)
-	if rn.Kind == kptgenv1alpha1.FnConfigKind {
-		return filepath.Join(rn.TargetDir, rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
+/*
+	func (rn *Resource) GetFilePath(kind string, suffixes ...string) string {
+		//fmt.Println("GetFilePath", rn.Kind, kptgenv1alpha1.FnConfigKind, rn.PackageName, rn.PodName, rn.Name)
+		if rn.Kind == kptgenv1alpha1.FnConfigKind {
+			return filepath.Join(rn.TargetDir, rn.PodName, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
+		}
+		return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
 	}
-	return filepath.Join(rn.TargetDir, rn.SubDir, strcase.KebabCase(rn.GetFileName(kind, suffixes...))+".yaml")
-}
-
+*/
 func (rn *Resource) GetServiceAccountName() string {
 	return strings.Join([]string{rn.PackageName, rn.PodName}, "-")
 }

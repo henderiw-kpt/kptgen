@@ -14,14 +14,14 @@ const (
 	ClusterRoleBindingKind = "ClusterRoleBinding"
 )
 
-func (rn *Resource) RenderClusterRoleBinding(obj interface{}) (*yaml.RNode, error) {
+func (rn *Resource) RenderClusterRoleBinding() (*yaml.RNode, error) {
 	x := &rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       ClusterRoleBindingKind,
 			APIVersion: rbacv1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: rn.GetRoleBindingName(),
+			Name:   rn.GetRoleBindingName(),
 			Labels: rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(ClusterRoleBindingKind),

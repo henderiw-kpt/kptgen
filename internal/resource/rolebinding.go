@@ -23,7 +23,7 @@ func (rn *Resource) RenderRoleBinding() (*yaml.RNode, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rn.GetRoleBindingName(),
 			Namespace: rn.Namespace,
-			Labels: rn.GetK8sLabels(),
+			Labels:    rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(RoleBindingKind),
 				kioutil.IndexAnnotation: "0",

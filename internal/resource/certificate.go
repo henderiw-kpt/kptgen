@@ -27,7 +27,7 @@ func (rn *Resource) RenderCertificate(cfg, obj interface{}) (*yaml.RNode, error)
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rn.GetCertificateName(),
 			Namespace: rn.Namespace,
-			Labels: rn.GetK8sLabels(),
+			Labels:    rn.GetK8sLabels(),
 			Annotations: map[string]string{
 				kioutil.PathAnnotation:  rn.GetRelativeFilePath(certv1.CertificateKind),
 				kioutil.IndexAnnotation: "0",

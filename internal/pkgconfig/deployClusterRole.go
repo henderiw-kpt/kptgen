@@ -29,7 +29,7 @@ func (r *pkgConfig) deployClusterRole(node *yaml.RNode) error {
 			ResourceNameKind: resource.NameKindKindResource,
 		}
 
-		node, err := rn.RenderClusterRole(rules, nil)
+		node, err := rn.RenderClusterRole(rules, nil, "")
 		if err != nil {
 			return err
 		}
